@@ -1,0 +1,1210 @@
+pal(myCol)
+par(mfrow=c(3,1))
+pal(myCol)
+pal(projectorCol)
+pal(rgBlindCol)
+pal(myCol,main='Reference colors')
+pal(projectorCol,main='Colors on projector'))
+pal(rgBlindCol,main='Colors with colorblindness'))
+pal(myCol,main='Reference colors')
+pal(projectorCol,main='Colors on projector')
+library(hdboot)
+?bootSvd
+Check the help#
+library(hdboot)#
+help(package=hdboot)
+x<-matrix(1:4,2,2)
+x
+apply(x,1,mean)
+apply(x,2,mean)
+apply(x,2,sd)
+apply(x,1,sd)
+x
+percentile(x)
+apply(x,2,mean)
+apply(x,2,sd)
+apply(x,2,function(x) quantile(x,.05))
+x<-matrix(1:100,50,2)
+x
+apply(x,2,function(x) quantile(x,.05))
+3/50
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+svdY<-fastSvd(Y)
+library(hdboot)
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+Create the package:#
+library('roxygen2')#
+library('devtools')#
+#set the working directory#
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package")#
+#create('hdboot') #only do this once#
+## Create the documentation fresh#
+document("hdboot", clean=TRUE)#
+## Install the package#
+install("hdboot")#
+## Check the help#
+library(hdboot)
+Create the package:#
+library('roxygen2')#
+library('devtools')#
+#set the working directory#
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package")#
+#create('hdboot') #only do this once#
+## Create the documentation fresh#
+document("hdboot", clean=TRUE)#
+## Install the package#
+install("hdboot")#
+## Check the help#
+library(hdboot)
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+svdY<-fastSvd(Y)
+V<- svdY$v #original sample PCs
+dim(V)
+dim(Y)
+Create the package:#
+library('roxygen2')#
+library('devtools')#
+#set the working directory#
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package")#
+#create('hdboot') #only do this once#
+## Create the documentation fresh#
+document("hdboot", clean=TRUE)#
+## Install the package#
+install("hdboot")#
+## Check the help#
+library(hdboot)
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+svdY<-fastSvd(Y)
+V<- svdY$v #original sample PCs
+dim(V)
+dim(Y)
+Create the package:#
+library('roxygen2')#
+library('devtools')#
+#set the working directory#
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package")#
+#create('hdboot') #only do this once#
+## Create the documentation fresh#
+document("hdboot", clean=TRUE)#
+## Install the package#
+install("hdboot")#
+## Check the help#
+library(hdboot)
+help(library='hdboot')
+help(package=hdboot)
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+svdY<-fastSvd(Y)
+V<- svdY$v #original sample PCs
+DUt<- tcrossprod(diag(svdY$d),svdY$u)
+bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+bootSvdOut<-bootSvd(DUt=DUt,bInds=bInds,Khat=3,talk=TRUE)
+bootSvdOut<-bootSvd(DUt=DUt,bInds=bInds,Khat=3,talk=TRUE)
+AsByB<-bootSvdOut$As
+AsByK<-getAsByK(AsByB)
+library(hdboot)
+AsByK<-getAsByK(AsByB)
+?getAsByK
+getAsByK<-function(As){#input a list of As[[b]][j,k] #j=1...p, or 1,...n depending#
+	Khat<-dim(As[[1]])[2]#
+	n<-dim(As[[1]])[1]#
+	B<-length(As)#
+	AsByK<-list() #
+	#each item in this list has b on the rows, k on the cols#
+	for(k in 1:Khat){#
+		AkMat<- matrix(NA,B,n) #b on the rows#
+		for(b in 1:B) AkMat[b,]<-As[[b]][,k]#
+		AsByK[[k]]<-AkMat#
+	}#
+	return(AsByK)#
+}#
+#
+#' Allows for study of the bootstrap distribution of the k^th singular values, but reindexing the list of \eqn{d^b} vectors to or
+AsByK<-getAsByK(AsByB)
+meanA1<-	apply(AsByK[[1]],2,mean)
+head(meanA1)
+plot(head(meanA1))
+seA1<-	apply(AsByK[[1]],2,sd)
+pA1<-	apply(AsByK[[1]],2,function(x) quantile(x,.05))
+head(pA1)
+help(package=hdboot)
+rep(1,dim(As[[1]])[1])
+getMomentsAndMomentCI(As=AsByB,V=diag(rep(1,dim(As[[1]])[1])))
+getMomentsAndMomentCI(As=AsByB,V=diag(rep(1,dim(As[[1]])[1])))
+getMomentsAndMomentCI<-function(As,V,Khat=dim(As[[1]])[2],talk=FALSE){#
+	AsByK<-getAsByK(As)#
+	EAs<-lapply(AsByK, colMeans) #EAs is indexed by k#
+	EVs<-lapply(EAs,function(EA) V %*% matrix(EA,ncol=1)) #V is pxn, EA_k is nx1, so this is nxpxK complexity across the whole lapply.#
+	varAs<-lapply(AsByK,var) #indexed by k#
+	varVs<-list()#
+	#varTime<-system.time({#
+	for(k in 1:length(AsByK)){#
+		# Calculate the diagonals without doing loops using:#
+		# diag(VA')=rowSums(V*A); or diag(V'A)=colSums(V*A)#
+		varVs[[k]]<-rowSums(  (V%*%varAs[[k]]) * V )#
+		if(talk) cat(paste0('...Got variance for PC #',k,'...\n'))#
+	}#
+	#})#end system.time#
+	sdVs<-lapply(varVs,sqrt)#
+#
+	momentCI<-lapply(1:Khat,function(k){#
+		cbind(EVs[[k]],EVs[[k]])+cbind(-2*sdVs[[k]],+2*sdVs[[k]])#
+	})#
+#
+	return(list(EVs=EVs,varVs=varVs,sdVs=sdVs,momentCI=momentCI))#varTime=varTime#
+}
+seA1_v2<- getMomentsAndMomentCI(As=AsByB,V=diag(rep(1,dim(As[[1]])[1])))
+debug(getMomentsAndMomentCI)
+seA1_v2<- getMomentsAndMomentCI(As=AsByB,V=diag(rep(1,dim(As[[1]])[1])))
+Q
+undebug(getMomentsAndMomentCI)
+seA1_v2<- getMomentsAndMomentCI(As=AsByB,V=diag(rep(1,dim(AsByB[[1]])[1])))
+names(seA1_v2)
+names(seA1_v2$sdVs)
+dim(seA1_v2$sdVs)
+length(seA1_v2$sdVs)
+clas(seA1_v2$sdVs)
+class(seA1_v2$sdVs)
+class(seA1_v2$sdVs[[1]])
+seA1_v2<- getMomentsAndMomentCI(As=AsByB,V=diag(rep(1,dim(AsByB[[1]])[1])))$sdVs[[1]]
+range(seA1_v2-seA1)
+all(seA1_v2==seA1)
+Create the package:#
+library('roxygen2')#
+library('devtools')#
+#set the working directory#
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package")#
+#create('hdboot') #only do this once#
+## Create the documentation fresh#
+document("hdboot", clean=TRUE)#
+## Install the package#
+install("hdboot")
+library(hdboot)
+check_doc("hdboot")
+Create the package:#
+library('roxygen2')#
+library('devtools')#
+#set the working directory#
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package")#
+#create('hdboot') #only do this once#
+## Create the documentation fresh#
+document("hdboot", clean=TRUE)#
+## Install the package#
+install("hdboot")#
+## Check the help#
+library(hdboot)#
+help(package=hdboot)#
+## Check the doc, pkg#
+check_doc("hdboot")
+system.time (check("hdboot"))
+VsByB<-As2Vs(As=AsByB,V=V)
+VsByK<-reindexPCsByK(VsByB)
+dim(VsByK[[1]])
+B
+percentileCI_V<-lapply(VbsByK,function(mat_k){#
+	apply(mat_k,2,function(x) quantile(x,c(.025,.975)))#
+})
+percentileCI_Vs<-lapply(VsByK,function(mat_k){#
+	apply(mat_k,2,function(x) quantile(x,c(.025,.975)))#
+})
+matplot(t(percentileCI_Vs[[1]],type='l'))
+matplot(t(percentileCI_Vs[[1]]),type='l')
+matplot(t(percentileCI_Vs[[2]]),type='l')# the 2nd PC is a little more interesting here.
+matplot(t(percentileCI_Vs[[2]]),type='l',lty=1)# the 2nd PC is a little more interesting here.
+matplot(t(percentileCI_Vs[[2]]),type='l',lty=1,col='blue')# the 2nd PC is a little more interesting here.
+k=2 # the 2nd PC is a little more interesting here.#
+matplot(t(percentileCI_Vs[[k]]),type='l',lty=1,col='blue')#
+lines(V[,k])
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+setwd("/Users/aaronfisher/Documents/JH/SMART/Vadim/Bootstrap SVD/package/hdboot/R")
+V=NULL
+d=NULL
+U=NULL
+B=200
+(any(is.null(V,d,U)))
+?is.null
+(any(is.null(V),is.null(d),is.null(U)))
+dim(Y)
+if(dim(Y)[1]<dim(Y)[2]) Y<-t(Y)
+dim(Y)
+if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)
+dim(Y)
+fastSvd(Y)
+svdY<-fastSvd(Y)
+dim(NULL)
+bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+dim(bInds)
+svdY<-fastSvd(Y)
+V<-svdY$v
+U<-svdY$u
+d<-svdY$d
+rm('svdY')
+svdY
+DUt<- tcrossprod(diag(d),U)
+if desired, use their bInds matrix
+if(!is.null(bInds)) bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+if(!is.null(bInds)) B<-dim(bInds)[1]
+bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=3,talk=talk)
+bootSvd_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,warning_type='silent',talk=FALSE){#
+	B<-dim(bInds)[1]#
+	n<-dim(DUt)[2]#
+#
+	#Objects to store results#
+	dbs<- #diagonals of the matrix D_b#
+	Ubs<-#
+	Abs<-list()#
+#
+	#Do SVDs#
+	if(talk) pb<-txtProgressBar(min = 1, max = B,  char = "=", style = 3)#
+	timeSVD<-system.time({#
+	for(b in 1:B){		#
+		#generally we won't include the subscript b here, in our variable names#
+		DUtP<-DUt[,bInds[b,]] #
+		svdASR<-QRsvd(DUtP, warning_type=warning_type)#
+#
+		#store d_b, switch sign and then store A_b and U_b#
+		dbs[[b]]<-svdASR$d#
+		signSwitcher <- sign(diag(svdASR$u))#
+		signSwitcher[signSwitcher==0]<-1 #sign() can possibly give us a zero, so we use as.numeric(logic)#
+		Abs[[b]]<-#
+		Ubs[[b]]<-matrix(NA,nrow=n,ncol=K) #
+		for(i in 1:K){#
+			Abs[[b]][,i]<-signSwitcher[i]*svdASR$u[,i]#
+			Ubs[[b]][,i]<-signSwitcher[i]*svdASR$v[,i]#
+		}#
+		if(talk) setTxtProgressBar(pb,b)#
+	}#
+	})#
+#
+	return(list(As=Abs,ds=dbs,Us=Ubs,time=timeSVD))#
+}
+bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)
+talk=T
+bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)
+K=2
+bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)
+if(talk) cat('Calculating n-dimensional bootstrap SVDs...')
+bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)
+HDmoments<-getMomentsAndMomentCI(bootSvd_LD_output$As,V,talk=TRUE)
+output<-list()
+names(bootSvd_LD_output)
+K
+bootSvd_LD_output$ds[[1]]
+n
+n<-dim(Y)[1]
+p<-dim(Y)[2]
+n
+p
+output<-list()
+output[['LDmoments']]<-getMomentsAndMomentCI(bootSvd_LD_output$As,diag(n),talk=FALSE)
+names(output$LDmoments)
+getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){#
+	AsByK<-reindexPCsByK(AsByB)#
+	EAs<-lapply(AsByK, colMeans) #EAs is indexed by k#
+	EVs<-lapply(EAs,function(EA) V %*% matrix(EA,ncol=1)) #V is pxn, EA_k is nx1, so this is nxpxK complexity across the whole lapply.#
+	varAs<-lapply(AsByK,var) #indexed by k#
+	varVs<-list()#
+	#varTime<-system.time({#
+	for(k in 1:length(AsByK)){#
+		# Calculate the diagonals without doing loops using:#
+		# diag(VA')=rowSums(V*A); or diag(V'A)=colSums(V*A)#
+		varVs[[k]]<-rowSums(  (V%*%varAs[[k]]) * V )#
+		if(talk) cat(paste0('...Got variance for PC #',k,'...\n'))#
+	}#
+	#})#end system.time#
+	sdVs<-lapply(varVs,sqrt)#
+#
+	momentCI<-lapply(1:K,function(k){#
+		cbind(EVs[[k]],EVs[[k]])+cbind(-2*sdVs[[k]],+2*sdVs[[k]])#
+	})#
+#
+	return(list(EPCs=EVs,varPCs=varVs,sdPCs=sdVs,momentCI=momentCI))#varTime=varTime#
+}
+output[['LDmoments']]<-getMomentsAndMomentCI(bootSvd_LD_output$As,diag(n),talk=FALSE)
+names(output)
+str(output)
+dim(output$LDmom$momentCI)
+dim(output$LDmom$momentCI[[1]])
+(output$LDmom$momentCI[[1]][,1:5])
+(output$LDmom$momentCI[[1]][1:5,])
+(output$LDmom$momentCI[[2]][1:5,])
+!!!!!!?????? search for PAPER and CITE for where to put our citation!#
+##!!!! adjust fastSvd to detect if a matrix is tall or short.#
+#!!!! for image0 & pal, see aaronjfisher package#
+#!! move/copy os() to aaronjfisher?#
+# add get AsByK documentation on LD CIs#
+# Add face data? give examples? Probably not nessecary#
+#* brainR has some images it looks like that you can use for geom. It's biggest data file size is 3Mb, which is smaller than your biggest face dataset. extrafontdb is 7.6mb#
+# in the readMe, add a note saying that in CITE PAPER, we considered the case where our data matrix was tall (i.e., p by n) Y, which can be decomposed via an SVD into Y=VDU'. However, in the example code presented here, we will generally use the convention that Y is a wide matrix, with svd(Y)=UDV'. In both notations, the V matrix corresponds the high dimensional basis vectors, and the matrix UD (or DU') corresponds to the low dimensional scores. However, because the \code{svd} function in R will use V to denote the right singular vectors of a matrix regardless of the dimension of that matrix, we use wide sample matrices such that the notation V used in PAPER becomes more consistent with the notation used by base R functions. This is simply a notation convention in our example code however, and does not affect core functionality of this package in any way.#
+#library(Matrix)#
+#library(colorspace)#
+#library(MASS)#
+#      _       _        #
+#     | |     | |       #
+#   __| | __ _| |_ __ _ #
+#  / _` |/ _` | __/ _` |#
+# | (_| | (_| | || (_| |#
+#  \__,_|\__,_|\__\__,_|#
+#' PCA results from EEG dataset#
+#'#
+#' Our data from PAPER consists of EEG measurements from the Sleep Heart Health Study (SHHS) CITE. Since we cannot publish the EEG recordings from the individuals in the SHHS in this package, we instead include the summary statistics of the PCs from our subsample of the processed SHHS EEG data. These summary statistics were generated from measurements of smoothed Normalized Delta Power. This data is used by the \code{simEEG} to simulate data examples to demonstrate our functions.#
+#'#
+#' The data includes#
+#' \itemize{#
+#'		\item{\code{EEG_mu}}{ A vector containing the mean normalized delta power function across all subjects}.#
+#'		\item{\code{EEG_leadingV}}{ A matrix containing the leading 5 principal components of the dataset}.#
+#'		\item{\code{EEG_score_var}}{ A vector containing the variances of the first 5 empirical score variables}.#
+#'}#
+#' @name EEG_PCA.rda#
+#' @docType data#
+#' @keywords data#
+NULL#
+#   __                  _   _                 #
+#  / _|                | | (_)                #
+# | |_ _   _ _ __   ___| |_ _  ___  _ __  ___ #
+# |  _| | | | '_ \ / __| __| |/ _ \| '_ \/ __|#
+# | | | |_| | | | | (__| |_| | (_) | | | \__ \#
+# |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/#
+#' Simulation functional EEG data#
+#'#
+#' Our data from PAPER consists of EEG measurements from the Sleep Heart Health Study (SHHS) CITE. Since we cannot publish the EEG recordings from the individuals in the SHHS, we instead include the summary statistics of the PCs from our subsample of the processed SHHS EEG data. This data is used by the \code{simEEG} to simulate functional data that is approximately similar to the data used in our work. The resulting simulated vectors are always of length 900, and are generated from 5 basis vectors.#
+#'#
+#' @param n the desired sample size#
+#' @param centered if TRUE, the sample will be centered to have mean zero for each dimension. If FALSE, measurements will be simulated from a population where the mean is equal to that observed in the sample used in PAPER.#
+#' @param propVarNoise the approximate proportion of total sample variance attributable to random noise.#
+#' @param wide if TRUE, the resulting data is outputted as a \code{n} by 900 matrix, with each row corresponding to a different subject. If FALSE, the resulting data is outputted as a 900 by \code{n} matrix, with each row corresponding to a different subject.#
+#'#
+#' @return A matrix containing \code{n} simulated measurement vectors of Normalized Delta Power, for the first 7.5 hours of sleep. These vectors are generated according to the equation:#
+#'#
+#' \eqn{y = \sum_{j=1}^{5} B_j * s_j + e}#
+#'#
+#' Where \eqn{y} is the simulated measurement for a subject, \eqn{B_j} is the \eqn{j^{th}} basis vector, \eqn{s_j} is a random normal variable with mean zero, and e is a vector of random normal noise. The specific values for \eqn{B_j} and \eqn{var(s_j)} are determined from the EEG data sample studied in CITE PAPER, and are respectively equal to the \eqn{j^{th}} empirical principal component vector, and the empirical variance of the \eqn{j^{th}} score variable.#
+#'#
+#'#
+#' @export#
+#'#
+#' @examples#
+#' set.seed(0)#
+#'#
+#' #Low noise example, for an illustration of smoother functions#
+#' Y<-simEEG(n=20,centered=FALSE,propVarNoise=.025,wide=FALSE)#
+#' matplot(Y,type='l',lty=1)#
+#'#
+#' #Higher noise example, for PCA#
+#' Y<-simEEG(n=100,centered=TRUE,propVarNoise=.5,wide=TRUE)#
+#' svdY<-fastSvd(Y)#
+#' V<-svdY$v #since Y is wide, the PCs are the right singular vectors (svd(Y)$v). #
+#' d<-svdY$d#
+#' head(cumsum(d^2)/sum(d^2),5) #first 5 PCs explain about half the variation#
+#' par(mfrow=c(1,2))#
+#' matplot(V[,1:5],type='l',lty=1) #PCs from simulated data#
+#' matplot(EEG_leadingV,type='l',lty=1) #population PCs#
+#' #Up to sign changes, the leading PCs from the simulated sample resemble the basic vectors we simulated from.#
+#'#
+simEEG<-function(n=100, centered=TRUE, propVarNoise=.45,wide=TRUE){#
+	#start by building Y as tall, then flip if wide==TRUE#
+#
+	data(EEG_PCA)#
+#
+	signalVar<-sum(EEG_score_var)#
+	noiseVar<- signalVar * propVarNoise/(1-propVarNoise)#
+#
+	noise<- matrix(rnorm(n*900,sd=sqrt(noiseVar/900)),nrow=900,ncol=n) #900 is the dimension of the sample#
+	scores<-t(mvrnorm(n,rep(0,5),Sigma=diag(EEG_score_var))) #we have 5 score variables, mvrnorm outputs a nx5 matrix, we want 5xn.#
+	Y<- tcrossprod(EEG_mu,rep(1,n)) + EEG_leadingV%*%scores + noise#
+	if(centered) Y <- t(scale(t(Y), center=TRUE, scale=FALSE)) #
+#
+	if(wide) Y<-t(Y)#
+	return(Y)#
+}#
+#
+#' Quickly get an R object's size#
+#'#
+#' @param x an object of interest#
+#' @param units measure to print size in#
+#'#
+#' @return print(object.size(x),units=units)#
+#' @export#
+#' @examples#
+#' Y<-simEEG(n=50)#
+#' os(Y)#
+os<-function(x,units='Mb') print(object.size(x),units=units)#
+#' Fast SVD of a wide or tall matrix#
+#'#
+#' \code{fastSvd} uses the inherent low dimensionality of a wide, or tall matrix to quickly calculate the SVD. Solves \eqn{svd(A)=UDV'}.#
+#'#
+#' @param A matrix of dimension (\eqn{n} by \eqn{m}), with \eqn{n<p}#
+#' @param nv number of high dimensional singular vectors to obtain. If \eqn{n>m}, this is the number of \eqn{n}-dimensional left singular vectors computed. If \eqn{n<m}, this is the number of \eqn{m}-dimensional right singular vectors computed.#
+#' @param warning_type passed to QRsvd, which calculates \code{svd(tcrossprod(A))}#
+#'#
+#' @return Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSvd} solves \eqn{svd(A)=UDV'}, where eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. Calculation times are considerably faster than the standard \code{svd} function.#
+#'#
+#' @export#
+#'#
+#' @examples#
+#'#
+#' #
+#' Y<-simEEG(n=100,centered=TRUE,wide=TRUE)#
+#' svdY<-fastSvd(Y)#
+#' V<-svdY$v #sample PCs for a wide matrix are the right singular vectors#
+#' matplot(V[,1:5],type='l',lty=1) #PCs from simulated data#
+#'#
+#' #Note: For a tall, demeaned matrix Y, with columns corresponding to subjects and rows to measurements, the PCs are the high dimensional left singular vectors.#
+fastSvd<-function(A,nv=min(dim(A)),warning_type='silent'){ #
+	N<-dim(A)[1]#
+	p<-dim(A)[2]#
+	flipped<-FALSE#
+	if(p==N) warning('for square matrix A, this function offers no speed improvement')#
+	if(p < N){ #for con#
+		A<-t(A)#
+		flipped<-TRUE #convert back at the end#
+	}#
+	#N and p are no longer used#
+#
+	#get AA'#
+	AAt<- tcrossprod(A)#
+	#get svd for AA' = UDV'VDU'=U D^2 U'#
+	#note, we have D=diag(d), where d is a vector and D is a matrix#
+	svdAAt<-QRsvd(AAt,warning_type=warning_type)#
+	#start with svd(AA')= UD^2 U'#
+#
+	#Solve for V:#
+	#A=UDV' => (D^-1)(U')A=V' => A'UD^-1 = V#
+	# arbitrary sign changes in columns of U won't affect anything, they'll just translate into arbitrary sign changes of V columns.#
+	d<-sqrt(svdAAt$d) #
+	if(!flipped){#
+		U <- svdAAt$u #left singular vectors of a wide matrix#
+		V <- crossprod(A,svdAAt$u[,1:nv]) %*% diag(1/d[1:nv]) #right singular vectors of a wide matrix#
+	}#
+	if(flipped){ #if flipped, transpose the results back!#
+		V <- svdAAt$u #
+		U <- crossprod(A,svdAAt$u[,1:nv]) %*% diag(1/d[1:nv])#
+	}#
+	return(list(v=V,u=U,d=d))#
+}#
+#' Generate random orthonormal matrix#
+#'#
+#' \code{genQ} generates a square matrix of random normal noise, and then takes the QR decomposition to return Q, a random orthogonal square matrix.#
+#'#
+#' @param n the dimension of the desired random orthogonal matrix#
+#' @param lim_attempts the random matrix of normal noise must be full rank to generate the appropriate QR decomposition. \code{lim_attempts} gives the maximum number of attempts for generating a full rank matrix of normal noise.#
+#'#
+#' @return a random orthonormal (\eqn{n} by \eqn{n}) matrix#
+#' @export#
+#'#
+#' @examples#
+#' A<-genQ(3)#
+#' round(crossprod(A),digits=10)#
+genQ<-function(n,lim_attempts=200){#
+	#get full rank noise matrix#
+	normal_mat_full_rank<-FALSE#
+	attempt_normal_mat<-0#
+	while((!normal_mat_full_rank) & attempt_normal_mat<lim_attempts){#
+		attempt_normal_mat <- attempt_normal_mat+1#
+		normal_mat_n<-matrix(rnorm(n^2),n,n)#
+		normal_mat_full_rank<- rankMatrix(normal_mat_n)==dim(normal_mat_n)[1]#
+	}#
+#
+	#Generate Q matrices#
+	Q_n<-qr.Q(qr(normal_mat_n))#
+	return(Q_n)	#
+}#
+#' Wrapper for \code{svd()}, which uses random preconditioning to restart when svd fails to converge#
+#'#
+#' In order to generate the SVD of the matrix \code{x}, \code{QRsvd}  calls \code{genQ()} to generate a random orthonormal matrix, and uses this random matrix to precondition \code{x}. The svd of the preconditioned matrix is calculated, and adjusted to account for the preconditioning process in order to find \code{svd(x)}.#
+#'#
+#'x,lim_attempts=50, warning_type='silent',warning_file='QRsvd_warnings.txt'#
+#' @param x a matrix to calculate the svd for#
+#' @param lim_attempts the number of tries to randomly precondition x. We generally find that one preconditioning attempt is sufficient.#
+#' @param warning_type controls whether the use should be told if an orthogonal preconditioning matrix is required, or if \code{svd()} gives warnings. 'silent' ignores these warnings, 'print' prints the warning to the console, and 'file' saves the warnings in a text file.#
+#' @param warning_file gives the location of a file to print warnings to, if \code{warning_type} is set to 'file'.#
+#' @param ... parameters passed to \code{svd()}, such as \code{nv} and \code{nu}.#
+#'#
+#' @return solves \eqn{svd(x)=UDV'}, where U is an nxn orthonormal matrix, D is an nxn diagonal matrix; and V is a pxn orthonormal matrix. Output follows the same notation as the \code{svd()} function. The number of singular vectors.#
+#' \code{QRsvd} will try the standard function \code{svd()} before attempting to precondition the matrix.#
+#' The number of attempts used to generate a random matrix of orthonormal noise is currently hard-coded at 200.#
+#'#
+#'#
+#' @export#
+#'#
+#' @examples#
+#' x<-matrix(rnorm(3*5),nrow=3,ncol=5)#
+#' QRsvd(x)#
+QRsvd<-function(x,lim_attempts=50, warning_type='silent',warning_file='QRsvd_warnings.txt', ...){ #
+#
+	gotSvd<-FALSE#
+	dx <- dim(x)#
+    n <- dx[1]#
+    p <- dx[2]#
+	silenceTry<-warning_type %in% c('silent','file')#
+#
+	#try basic attempt -- if successful, skip rest of function#
+	try({#
+		out<-svd(x, ...)#
+		gotSvd<-TRUE#
+	},silent=silenceTry)#
+#
+	#if this fails, try with Q preconditioning matrixes#
+	#Get UDV'= svd(t(Q_n) %*% x %*% Q_p)#
+	#(Q_nU)D(Q_pV)'= svd(x)#
+	# nu and nv will translate appropriately (first nv columns of V will yeild first nv columns of Q_p %*% V=Q_p %*% V[,1:nv]).#
+	attempt_svd <-0#
+	while( (!gotSvd) & (attempt_svd<lim_attempts) ){#
+		attempt_svd <- attempt_svd+1#
+		#Generate Q matrices#
+		Q_n<-genQ(n,lim_attempts= 200)#
+		if(n==p) Q_p<-Q_n#
+		if(n!=p) Q_p<-genQ(p,lim_attempts= 200)#
+#
+		#Try to find svd on the transformed space, then map back#
+		try({#
+			UDVt<-svd( crossprod(Q_n,x) %*% Q_p, ...)#
+			out<-list()#
+			out$d<- UDVt$d#
+			out$u<- Q_n %*% UDVt$u#
+			out$v<- Q_p %*% UDVt$v#
+#
+			gotSvd<-TRUE#
+		},silent=silenceTry )#
+#
+	}#
+#
+	#give warnings if we had to do extra attempts#
+	if(attempt_svd>0){#
+		err_message<- paste('SVD Attained. Number of preconditioning attempts needed =',attempt_svd)#
+#
+		#print warnings#
+		if(warning_type=='print') print(err_message)#
+		#Save warnings#
+		#if file size is already to big, don't print#
+		print2file<-TRUE#
+		if(file.exists (warning_file)) # if it exists but it's too big#
+			if( file.info(warning_file)$size > 50000) print2file<-FALSE#
+		if(warning_type=='file' & print2file) #
+			cat(paste(date(),'-',err_message,'\n'),file=warning_file,append=TRUE)	#
+	}#
+#
+	return(out)#
+}#
+#
+#' Generate a random set of bootstrap resampling indeces#
+#'#
+#' \code{genBootIndeces} generates a (\eqn{B} by \eqn{n}) matrix containing \eqn{B} indexing vectors that can be used to create bootstrap samples of size \eqn{n}.#
+#' @param B number of desired bootstrap samples#
+#' @param n size of original sample from which we'll be resampling.#
+#' @return a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, denoted here by \code{bInds}. If \code{Y} is an original (\eqn{p} by \eqn{n}) sample, then \code{Y[bInds[b,]} is the \eqn{b^{th}} bootstrap sample.#
+#' @export#
+#' @examples#
+#' test<-genBootIndeces(B=1000,n=200)#
+genBootIndeces<-function(B,n){#
+	bInds<-array(NA,dim=c(B,n)) #bootstrap indeces#
+	for(b in 1:B) bInds[b,]<-sample(n,replace=TRUE)#
+	return(bInds)#
+}#
+#' Calculate bootstrap distribution of n-dimensional PCs#
+#'#
+#' \code{bootSvd_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional score matrix. Results can be passed to other functions, in order to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components.#
+#'#
+#' @param UD a (\eqn{n} by \eqn{n}) matrix of scores, were rows denote individuals, and columns denote measurements in the PC space.#
+#' @param DUt the transpose of \code{UD}, which can be entered instead. This will override \code{UD} if \code{t(UD)!=DUt}.#
+#' @param bInds a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, where \code{B} is the number of bootstrap samples, and \code{n} is the sample size. The bootstrap index matrix is taken as input so that this method can be compared against traditional methods on the exact same bootstrap sample. see \code{genBootIndeces()}.#
+#' @param K the number of PCs to be estimated.#
+#' @param warning_type passed to \code{QRsvd()}, when taking the SVD of the low dimensional bootstrap score matrices.#
+#' @param talk setting this to \code{TRUE} will cause a progress bar to appear.#
+#'#
+#' @return For each bootstrap matrix \eqn{(DU')^b}, let \eqn{svd(DU')=:A^b D^b U^b}, where \eqn{A^b} and \eqn{U^b} are (\eqn{n} by \eqn{n}) orthonormal matrices, and \eqn{D^b} is (\eqn{n} by \eqn{n}) diagonal matrix \eqn{K}. Here we calculate only the first \code{K} columns of \eqn{A^b}. The results are stored in list containing#
+#'	\item{As}{a list of the \code{n} by \code{K} matrices containing the first \code{K} PCs from each bootstrap sample. This list is indexed by \code{b}, with the \eqn{b^{th}} element containing the results from the \eqn{b^{th}} bootstrap sample.}#
+#'	\item{ds}{a list of vectors, indexed by the bootstrap index \code{b}, with each vector containing the singular values of the corresponding bootstrap sample.}#
+#'	\item{Us}{a list, indexed by the bootstrap index \code{b}, of the (\eqn{n} by \eqn{n}) matrices \eqn{U^b}.}#
+#'	\item{time}{The computation time required for the procedure, taken using \code{system.time()}.}#
+#' These results can be transformed to get the PCs on the original space by multiplying each matrix \eqn{A^b} by \eqn{V}, the PCs of the original sample. The bootstrap scores are equal to \eqn{U^b D^b}.#
+#' @export#
+#'#
+#' @examples#
+#' #use small n, small B for a quick illustration#
+#' set.seed(0)#
+#' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) #
+#' svdY<-fastSvd(Y)#
+#' DUt<- diag(svdY$d)%*%svdY$v #v gives the high dimensional, right singular vectors.#
+#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+#' bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)#
+bootSvd_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,warning_type='silent',talk=FALSE){#
+	B<-dim(bInds)[1]#
+	n<-dim(DUt)[2]#
+#
+	#Objects to store results#
+	dbs<- #diagonals of the matrix D_b#
+	Ubs<-#
+	Abs<-list()#
+#
+	#Do SVDs#
+	if(talk) pb<-txtProgressBar(min = 1, max = B,  char = "=", style = 3)#
+	timeSVD<-system.time({#
+	for(b in 1:B){		#
+		#generally we won't include the subscript b here, in our variable names#
+		DUtP<-DUt[,bInds[b,]] #
+		svdASR<-QRsvd(DUtP, warning_type=warning_type)#
+#
+		#store d_b, switch sign and then store A_b and U_b#
+		dbs[[b]]<-svdASR$d#
+		signSwitcher <- sign(diag(svdASR$u))#
+		signSwitcher[signSwitcher==0]<-1 #sign() can possibly give us a zero, so we use as.numeric(logic)#
+		Abs[[b]]<-#
+		Ubs[[b]]<-matrix(NA,nrow=n,ncol=K) #
+		for(i in 1:K){#
+			Abs[[b]][,i]<-signSwitcher[i]*svdASR$u[,i]#
+			Ubs[[b]][,i]<-signSwitcher[i]*svdASR$v[,i]#
+		}#
+		if(talk) setTxtProgressBar(pb,b)#
+	}#
+	})#
+#
+	return(list(As=Abs,ds=dbs,Us=Ubs,time=timeSVD))#
+}#
+#' Convert low dimensional bootstrap components to high dimensional bootstrap components#
+#'#
+#' \code{As2Vs} is a simple function converts the list of principal components (PCs) for the bootstrap scores to a list of principal components on the original high dimensional space.#
+#' @param As a list of the bootstrap PCs matrices for each bootstrap sample.#
+#' @param V a (\eqn{p} by \eqn{n}) matrix containing the PCs of the original sample, where \eqn{n} is sample size, and \eqn{p} is sample dimension.#
+#' @param ... (optional) passed to \code{mclapply()}, for parallelizing the computation procedure.#
+#' @return a \code{B}-length list of \code{p} times {K} PC matrices on the original sample space (denoted as \eqn{V^b}). This is achieved by the simple matrix multiplication \eqn{V^b=VA^b}#
+#' @export#
+#'#
+#' @examples#
+#' #use small n, small B for a quick illustration#
+#' set.seed(0)#
+#' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) #
+#' svdY<-fastSvd(Y)#
+#' DUt<- tcrossprod(diag(svdY$d),svdY$u)#
+#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+#' bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)#
+#'#
+#' Vs<-As2Vs(As=bootSvd_LD_output$As,V=svdY$v) #Yeilds the high dimensional bootstrap PCs (left singular vectors of the bootstrap sample Y), indexed by b = 1,2...B, where B is the number of bootstrap samples.#
+As2Vs<-function(As,V, ...){#
+	B<-length(As)#
+	Vs<-mclapply(1:B, FUN=function(b)  V %*% As[[b]], ...)#
+	return(Vs)#
+}#
+#' Allows for calculation of low dimensional standard errors & percentiles, by reindexing the \eqn{A^b} by PC index (k) rather than bootstrap index (b).#
+#'#
+#' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{getMomentsAndMomentCI}.#
+#'#
+#' @param PCsByB a list of the \code{r} by \code{K} bootstrap PCs matrices for each bootstrap sample, where \code{K} is the number of PCs of interest. These may refer to the 'n-dimensional' components \eqn{A^b} (i.e. \eqn{r:=n}), or to the high dimensional components \eqn{V^b} (i.e. \eqn{r:=p}). In both cases, the input matrices should be indexed by \eqn{b}, where \eqn{b=1,2,...B}, and \eqn{B} is the number of bootstrap samples.#
+#' @return a \code{K} length list of (\eqn{B} by \eqn{r}) matrices, where each matrices' rows refers to a fitted PC from a different bootstrap sample. This allows for quick estimation of low dimensional moments, or percentiles. Moments can also be directly calculated by the \code{getMomentsAndMomentCI} function.#
+#'#
+#' #use small n, small B for a quick illustration#
+#' set.seed(0)#
+#' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) #
+#' svdY<-fastSvd(Y)#
+#' V<- svdY$v #original sample PCs#
+#' DUt<- tcrossprod(diag(svdY$d),svdY$u)#
+#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+#' bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)#
+#'#
+#' #########
+#' # to get 'low dimensional PC' moments and lower percentiles#
+#' AsByB<-bootSvd_LD_output$As#
+#' AsByK<-reindexPCsByK(AsByB)#
+#'#
+#' meanA1<-	apply(AsByK[[1]],2,mean)#
+#' seA1<-	apply(AsByK[[1]],2,sd)#
+#' pA1<-	apply(AsByK[[1]],2,function(x) quantile(x,.05))#
+#' #can also use lapply to get a list (indexed by k=1,...K) of the means, standard errors, or percentiles for each PC. See example below, for high dimensional bootstrap PCs.#
+#'#
+#' #Alternatively, moments can be calculated with#
+#' seA1_v2<- getMomentsAndMomentCI(As=AsByB,V=diag(dim(AsByB[[1]])[1]))$sdPCs[[1]]#
+#' all(seA1_v2==seA1)#
+#' ##########
+#'#
+#' ##########
+#' #High dimensional percentiles for each PC#
+#' VsByB<-As2Vs(As=AsByB,V=V)#
+#' VsByK<-reindexPCsByK(VsByB)#
+#' percentileCI_Vs<-lapply(VsByK,function(mat_k){#
+#' 	apply(mat_k,2,function(x) quantile(x,c(.025,.975)))#
+#' })#
+#' k=2 # the 2nd PC is a little more interesting here.#
+#' matplot(t(percentileCI_Vs[[k]]),type='l',lty=1,col='blue')#
+#' lines(V[,k])#
+#' #########
+#'#
+reindexPCsByK<-function(PCsByB){#input a list of PC[[b]][j,k] #j=1...r, where r = dimension; k=1,...K=PC index#
+	K<-dim(PCsByB[[1]])[2]#
+	r<-dim(PCsByB[[1]])[1]#
+	B<-length(PCsByB)#
+	PCsByK<-list() #
+	#each item in this list has b on the rows, k on the cols#
+	for(k in 1:K){#
+		AkMat<- matrix(NA,B,r) #b on the rows#
+		for(b in 1:B) AkMat[b,]<-PCsByB[[b]][,k]#
+		PCsByK[[k]]<-AkMat#
+	}#
+	return(PCsByK)#
+}#
+#
+#' Allows for study of the bootstrap distribution of the k^th singular values, but reindexing the list of \eqn{d^b} vectors to organized by PC index (k) rather than bootstrap index (b).#
+#' @param dsByB a list of vectors, with each vector containing the \code{n} singular values from a different bootstrap sample.#
+#' @return a \code{K} length list of (\eqn{B} by \eqn{n}) matrices, where each matrices' rows refers to the singular values from a different bootstrap sample.#
+reindexdsByK<-function(dsByB){#
+	n<-length(dsByB[[1]])#
+	B<-length(dsByB)#
+	dsByK<-list() #
+	#each item in this list has b on the rows, k on the cols#
+	for(k in 1:n){#
+		dk<- rep(NA,B) #b on the rows#
+		for(b in 1:B) dk[b]<-dsByB[[b]][k]#
+		dsByK[[k]]<-dk#
+	}#
+	return(dsByK)#
+}#
+#' Calculate bootstrap moments and moment based condifence intervals (CIs).#
+#'#
+#' In general, we use \eqn{k} to refer to the principal component (PC) index, and \eqn{b} to refer to the bootstrap index, where \eqn{b=1,2,...B}, and \eqn{B} is the number of bootstrap samples. We use \eqn{p} to refer to the dimension of the original sample, or the number of measurements taken per subject.#
+#' @param AsByB a list of the bootstrap PC matrices for each bootstrap sample. This list should be indexed by \eqn{b}, with the \eqn{b^{th}} element containing the results from the \eqn{b^{th}} bootstrap sample.#
+#' @param V a (\eqn{p} by \eqn{n}) containing the coordinate vectors for the matrices within the \code{AsByB} list. Generally, for bootstrap PCA, this will be the matrix containing the PCs of the original sample, where \eqn{n} is sample size, and \eqn{p} is sample dimension.#
+#' @param K the number of leading PCs for which moments and confidence intervals should be obtained.#
+#' @param talk setting to \code{TRUE} will cause the function to print when it has completed calculating the bootstrap variance for each PC.#
+#' @return a list containing#
+#'	\item{EVs}{a list containing element-wise bootstrap means for each of the \code{K} fitted PCs, indexed by \code{k}.}#
+#'	\item{varVs}{a list containing element-wise bootstrap variances for each of the \code{K} fitted PCs, indexed by \code{k}.}#
+#'	\item{sdVs}{a list containing element-wise bootstrap standard errors for each of the \code{K} fitted PCs, indexed by \code{k}.}#
+#'	\item{momentCI}{a list of (\eqn{p} by \eqn{2}) matrices, indexed by \code{k}, where \code{momentCI[[k]][j,]} is the pointwise moment-based CI for the \eqn{j^{th}} element of the \eqn{k^{th}} PC.}#
+#' @export#
+#' @examples#
+#'#
+#' #use small n, small B for a quick illustration#
+#' set.seed(0)#
+#' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) #
+#' svdY<-fastSvd(Y)#
+#' V<-svdY$v #right singular vectors of the wide matrix Y#
+#' DUt<- tcrossprod(diag(svdY$d),svdY$u)#
+#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+#' bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)#
+#' #
+#' moments<-getMomentsAndMomentCI(bootSvd_LD_output$As,V,talk=TRUE)#
+#' plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')#
+#' matlines(moments$momentCI[[1]],col='blue',lty=1)#
+#'#
+#' #Can also use this function to get moments for low dimensional vectors A^b[,k], by setting V to the identity matrix.#
+#' moments_A<- getMomentsAndMomentCI(As=AsByB,V=diag(dim(AsByB[[1]])[1]))#
+getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){#
+	AsByK<-reindexPCsByK(AsByB)#
+	EAs<-lapply(AsByK, colMeans) #EAs is indexed by k#
+	EVs<-lapply(EAs,function(EA) V %*% matrix(EA,ncol=1)) #V is pxn, EA_k is nx1, so this is nxpxK complexity across the whole lapply.#
+	varAs<-lapply(AsByK,var) #indexed by k#
+	varVs<-list()#
+	#varTime<-system.time({#
+	for(k in 1:length(AsByK)){#
+		# Calculate the diagonals without doing loops using:#
+		# diag(VA')=rowSums(V*A); or diag(V'A)=colSums(V*A)#
+		varVs[[k]]<-rowSums(  (V%*%varAs[[k]]) * V )#
+		if(talk) cat(paste0('...Got variance for PC #',k,'...\n'))#
+	}#
+	#})#end system.time#
+	sdVs<-lapply(varVs,sqrt)#
+#
+	momentCI<-lapply(1:K,function(k){#
+		cbind(EVs[[k]],EVs[[k]])+cbind(-2*sdVs[[k]],+2*sdVs[[k]])#
+	})#
+#
+	return(list(EPCs=EVs,varPCs=varVs,sdPCs=sdVs,momentCI=momentCI))#varTime=varTime#
+}
+ls()
+reindexPCsByK
+output[['LDmoments']]
+percentiles
+AsByK<-reindexPCsByK(PCsByB=bootSvd_LD_output$As)#
+output[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+		t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+	})
+percentiles=c(.025,.975)
+output[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+		t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+	})
+str(output)
+x
+x<-lapply(AsByK,function(mat_k){#
+		t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+	})
+names(x)
+x[[1]]
+x[[2]]
+head(x[[2]])
+head(x[[1]])
+length(x)
+class(x)
+names(bootSvd_LD_output$As)
+names(bootSvd_LD_output)
+always include#
+output[['LDmoments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)#
+#
+AsByK<-reindexPCsByK(PCsByB=AsByB)#
+output[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+		t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+	})#
+#########
+if('initial_SVD' %in% output){#
+	output[['initial_SVD']]<-list(V=V,d=d,U=U)#
+}#
+if('se' %in% output){#
+	output[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)#
+}#
+if('full_HD_dist' %in% output){#
+	if(talk) cat('Calculating HD Bootstrap PC distribution...')#
+	output[['VsByB']]<-As2Vs(AsByB)#
+}#
+if('full_LD_PC_dist' %in% output){#
+	output[['AsByB']]<-AsByB#
+}#
+if('d_dist' %in% output){#
+	output[['d_dist']]<-bootSvd_LD_output$ds#
+}#
+if('U_dist' %in% output){#
+	output[['U_dist']]<-bootSvd_LD_output$Us#
+}
+os(output)
+output
+output
+output='se'
+out_contents<-list()#
+#
+#######
+#always include#
+out_contents[['LDmoments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)#
+#
+AsByK<-reindexPCsByK(PCsByB=AsByB)#
+out_contents[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+		t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+	})#
+#########
+if('initial_SVD' %in% output){#
+	out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)#
+}#
+if('se' %in% output){#
+	out_contents[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)#
+}#
+if('full_HD_dist' %in% output){#
+	if(talk) cat('Calculating HD Bootstrap PC distribution...')#
+	out_contents[['VsByB']]<-As2Vs(AsByB)#
+}#
+if('full_LD_PC_dist' %in% output){#
+	out_contents[['AsByB']]<-AsByB#
+}#
+if('d_dist' %in% output){#
+	out_contents[['d_dist']]<-bootSvd_LD_output$ds#
+}#
+if('U_dist' %in% output){#
+	out_contents[['U_dist']]<-bootSvd_LD_output$Us#
+}
+os(out_contents)
+str(out_contents)
+out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)
+out_contents[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)
+if(talk) cat('Calculating HD Bootstrap PC distribution...')
+out_contents[['VsByB']]<-As2Vs(AsByB)
+?mclapply
+As2Vs<-function(As,V, ...){#
+	B<-length(As)#
+	Vs<-mclapply(1:B, FUN=function(b)  V %*% As[[b]],mc.cores=1, ...)#
+	return(Vs)#
+}
+out_contents[['VsByB']]<-As2Vs(AsByB)
+out_contents[['VsByB']]<-As2Vs(AsByB,V=V)
+if(talk) cat('Calculating HD Bootstrap PC distribution...')
+out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)
+mc.cores
+mc.cores=1
+out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)
+As2Vs<-function(As,V,mc.cores=1, ...){#
+	B<-length(As)#
+	Vs<-mclapply(1:B, FUN=function(b)  V %*% As[[b]],mc.cores=mc.cores, ...)#
+	return(Vs)#
+}
+out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)
+out_contents[['AsByB']]<-AsByB
+out_contents[['d_dist']]<-bootSvd_LD_output$ds
+out_contents[['U_dist']]<-bootSvd_LD_output$Us
+os(out_contents)
+Y<-simEEG(n=50, centered=TRUE, wide=TRUE)
+rank(Y)
+min(dim(Y))
+dim(V)[2] != min(dim(Y))
+dim(V)
+if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)#
+	if(talk) cat('Getting initial svd(Y)...')#
+	svdY<-fastSvd(Y)#
+	V<-svdY$v#
+	U<-svdY$u#
+	d<-svdY$d
+dim(V)[2] != min(dim(Y))
+any(is.null(V),is.null(d),is.null(U)) | dim(V)[2] != min(dim(Y))
+any(is.null(V),is.null(d),is.null(U))
+bootSvd<-function(Y,V=NULL,d=NULL,U=NULL,B=50,K,output='se',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),mc.cores=1){#
+#
+	#get initial SVD, if needed#
+	if(any(is.null(V),is.null(d),is.null(U)) | dim(V)[2] != min(dim(Y)) ){#
+		#convert Y to a wide matrix, for ease of coding with svd()#
+		if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)#
+		if(talk) cat('Getting initial svd(Y)...')#
+		svdY<-fastSvd(Y)#
+		V<-svdY$v#
+		U<-svdY$u#
+		d<-svdY$d#
+		rm('svdY')#
+	}#
+	n<-dim(Y)[1]#
+	p<-dim(Y)[2]#
+	DUt<- tcrossprod(diag(d),U)#
+#
+	#if desired, use their bInds matrix#
+	if(!is.null(bInds)) bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+	if(!is.null(bInds)) B<-dim(bInds)[1]#
+#
+	if(talk) cat('Calculating n-dimensional bootstrap SVDs...')#
+	bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)#
+	AsByB<-bootSvd_LD_output$As#
+	out_contents<-list()#
+#
+	#######
+	#always include#
+	out_contents[['LDmoments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)#
+#
+	AsByK<-reindexPCsByK(PCsByB=AsByB)#
+	out_contents[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+			t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+		})#
+#
+	#########
+	if('initial_SVD' %in% output){#
+		out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)#
+	}#
+	if('se' %in% output){#
+		out_contents[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)#
+	}#
+	if('full_HD_dist' %in% output){#
+		if(talk) cat('Calculating HD Bootstrap PC distribution...')#
+		out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)#
+	}#
+	if('full_LD_PC_dist' %in% output){#
+		out_contents[['AsByB']]<-AsByB#
+	}#
+	if('d_dist' %in% output){#
+		out_contents[['d_dist']]<-bootSvd_LD_output$ds#
+	}#
+	if('U_dist' %in% output){#
+		out_contents[['U_dist']]<-bootSvd_LD_output$Us#
+	}#
+#
+	return(out_contents)#
+}#
+#
+#' Quickly calculates bootstrap PCA results (Same exact functionality as bootSvd, only included for sake of PCA notation)#
+#' Everything is passed to bootSvd#
+bootPCA<-function(...) bootSvd(...)
+Y<-simEEG(n=50, centered=TRUE, wide=TRUE)
+results<-bootSvd(Y,B=50,K=2,output=c('initial_SVD','se'))
+any(is.null(V),is.null(d),is.null(U))
+dim(V)[2] != min(dim(Y))
+(any(is.null(V),is.null(d),is.null(U)) | dim(V)[2] != min(dim(Y)) )
+debugonce(bootSvd)
+results<-bootSvd(Y,B=50,K=2,output=c('initial_SVD','se'))
+U
+V
+d
+dim(Y)
+bootSvd<-function(Y,V=NULL,d=NULL,U=NULL,B=50,K,output='se',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),mc.cores=1){#
+#
+	#get initial SVD, if needed#
+	notfullV<-TRUE#
+	if(!is.null(V)) if(dim(V)[2] == min(dim(Y))) notfullV<-FALSE#
+	if(any(is.null(V),is.null(d),is.null(U))|notfullV){#
+		#convert Y to a wide matrix, for ease of coding with svd()#
+		if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)#
+		if(talk) cat('Getting initial svd(Y)...')#
+		svdY<-fastSvd(Y)#
+		V<-svdY$v#
+		U<-svdY$u#
+		d<-svdY$d#
+		rm('svdY')#
+	}#
+	n<-dim(Y)[1]#
+	p<-dim(Y)[2]#
+	DUt<- tcrossprod(diag(d),U)#
+#
+	#if desired, use their bInds matrix#
+	if(!is.null(bInds)) bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+	if(!is.null(bInds)) B<-dim(bInds)[1]#
+#
+	if(talk) cat('Calculating n-dimensional bootstrap SVDs...')#
+	bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)#
+	AsByB<-bootSvd_LD_output$As#
+	out_contents<-list()#
+#
+	#######
+	#always include#
+	out_contents[['LDmoments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)#
+#
+	AsByK<-reindexPCsByK(PCsByB=AsByB)#
+	out_contents[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+			t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+		})#
+#
+	#########
+	if('initial_SVD' %in% output){#
+		out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)#
+	}#
+	if('se' %in% output){#
+		out_contents[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)#
+	}#
+	if('full_HD_dist' %in% output){#
+		if(talk) cat('Calculating HD Bootstrap PC distribution...')#
+		out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)#
+	}#
+	if('full_LD_PC_dist' %in% output){#
+		out_contents[['AsByB']]<-AsByB#
+	}#
+	if('d_dist' %in% output){#
+		out_contents[['d_dist']]<-bootSvd_LD_output$ds#
+	}#
+	if('U_dist' %in% output){#
+		out_contents[['U_dist']]<-bootSvd_LD_output$Us#
+	}#
+#
+	return(out_contents)#
+}#
+#
+#' Quickly calculates bootstrap PCA results (Same exact functionality
+Q
+bootSvd<-function(Y,V=NULL,d=NULL,U=NULL,B=50,K,output='se',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),mc.cores=1){#
+#
+	#get initial SVD, if needed#
+	notfullV<-TRUE#
+	if(!is.null(V)) if(dim(V)[2] == min(dim(Y))) notfullV<-FALSE#
+	if(any(is.null(V),is.null(d),is.null(U))|notfullV){#
+		#convert Y to a wide matrix, for ease of coding with svd()#
+		if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)#
+		if(talk) cat('Getting initial svd(Y)...')#
+		svdY<-fastSvd(Y)#
+		V<-svdY$v#
+		U<-svdY$u#
+		d<-svdY$d#
+		rm('svdY')#
+	}#
+	n<-dim(Y)[1]#
+	p<-dim(Y)[2]#
+	DUt<- tcrossprod(diag(d),U)#
+#
+	#if desired, use their bInds matrix#
+	if(!is.null(bInds)) bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+	if(!is.null(bInds)) B<-dim(bInds)[1]#
+#
+	if(talk) cat('Calculating n-dimensional bootstrap SVDs...')#
+	bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)#
+	AsByB<-bootSvd_LD_output$As#
+	out_contents<-list()#
+#
+	#######
+	#always include#
+	out_contents[['LDmoments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)#
+#
+	AsByK<-reindexPCsByK(PCsByB=AsByB)#
+	out_contents[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+			t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+		})#
+#
+	#########
+	if('initial_SVD' %in% output){#
+		out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)#
+	}#
+	if('se' %in% output){#
+		out_contents[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)#
+	}#
+	if('full_HD_dist' %in% output){#
+		if(talk) cat('Calculating HD Bootstrap PC distribution...')#
+		out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)#
+	}#
+	if('full_LD_PC_dist' %in% output){#
+		out_contents[['AsByB']]<-AsByB#
+	}#
+	if('d_dist' %in% output){#
+		out_contents[['d_dist']]<-bootSvd_LD_output$ds#
+	}#
+	if('U_dist' %in% output){#
+		out_contents[['U_dist']]<-bootSvd_LD_output$Us#
+	}#
+#
+	return(out_contents)#
+}#
+#
+#' Quickly calculates bootstrap PCA results (Same exact functionality
+results<-bootSvd(Y,B=50,K=2,output=c('initial_SVD','se'))
+debugonce(bootSvd)
+results<-bootSvd(Y,B=50,K=2,output=c('initial_SVD','se'))
+B
+bInds
+Q
+debugonce(bootSvd)
+results<-bootSvd(Y,B=50,K=2,output=c('initial_SVD','se'))
+bootSvd<-function(Y,V=NULL,d=NULL,U=NULL,B=50,K,output='se',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),mc.cores=1){#
+#
+	#get initial SVD, if needed#
+	notfullV<-TRUE#
+	if(!is.null(V)) if(dim(V)[2] == min(dim(Y))) notfullV<-FALSE#
+	if(any(is.null(V),is.null(d),is.null(U))|notfullV){#
+		#convert Y to a wide matrix, for ease of coding with svd()#
+		if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)#
+		if(talk) cat('Getting initial svd(Y)...')#
+		svdY<-fastSvd(Y)#
+		V<-svdY$v#
+		U<-svdY$u#
+		d<-svdY$d#
+		rm('svdY')#
+	}#
+	n<-dim(Y)[1]#
+	p<-dim(Y)[2]#
+	DUt<- tcrossprod(diag(d),U)#
+#
+	#if desired, use their bInds matrix#
+	if(is.null(bInds)) bInds<-genBootIndeces(B=200,n=dim(DUt)[2])#
+	if(!is.null(bInds)) B<-dim(bInds)[1]#
+#
+	if(talk) cat('Calculating n-dimensional bootstrap SVDs...')#
+	bootSvd_LD_output<-bootSvd_LD(DUt=DUt,bInds=bInds,K=K,talk=talk)#
+	AsByB<-bootSvd_LD_output$As#
+	out_contents<-list()#
+#
+	#######
+	#always include#
+	out_contents[['LDmoments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)#
+#
+	AsByK<-reindexPCsByK(PCsByB=AsByB)#
+	out_contents[['LDpercentiles']]<-lapply(AsByK,function(mat_k){#
+			t(apply(mat_k,2,function(x) quantile(x,percentiles)))#
+		})#
+#
+	#########
+	if('initial_SVD' %in% output){#
+		out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)#
+	}#
+	if('se' %in% output){#
+		out_contents[['HDmoments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)#
+	}#
+	if('full_HD_dist' %in% output){#
+		if(talk) cat('Calculating HD Bootstrap PC distribution...')#
+		out_contents[['VsByB']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)#
+	}#
+	if('full_LD_PC_dist' %in% output){#
+		out_contents[['AsByB']]<-AsByB#
+	}#
+	if('d_dist' %in% output){#
+		out_contents[['d_dist']]<-bootSvd_LD_output$ds#
+	}#
+	if('U_dist' %in% output){#
+		out_contents[['U_dist']]<-bootSvd_LD_output$Us#
+	}#
+#
+	return(out_contents)#
+}
+results<-bootSvd(Y,B=50,K=2,output=c('initial_SVD','se'))
+str(results)
+names(str(results))
+names((results))

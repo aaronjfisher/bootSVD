@@ -1,0 +1,54 @@
+\name{qrSVD}
+\alias{qrSVD}
+\title{Wrapper for \code{\link{svd}}, which uses random preconditioning to restart when svd fails to converge}
+\usage{
+qrSVD(x, lim_attempts = 50, warning_type = "silent",
+  warning_file = "qrSVD_warnings.txt", ...)
+}
+\arguments{
+  \item{x}{a matrix to calculate the svd for}
+
+  \item{lim_attempts}{the number of tries to randomly
+  precondition x. We generally find that one
+  preconditioning attempt is sufficient.}
+
+  \item{warning_type}{controls whether the user should be
+  told if an orthogonal preconditioning matrix is required,
+  or if \code{\link{svd}} gives warnings. 'silent' ignores
+  these warnings, 'print' prints the warning to the
+  console, and 'file' saves the warnings in a text file.}
+
+  \item{warning_file}{gives the location of a file to print
+  warnings to, if \code{warning_type} is set to 'file'.}
+
+  \item{...}{parameters passed to \code{\link{svd}}, such
+  as \code{nv} and \code{nu}.}
+}
+\value{
+Solves \eqn{svd(x)=UDV'}, where \eqn{U} is an matrix
+containing the left singular vectors of \eqn{x}, \eqn{D} is
+a diagonal matrix containing the singular values of
+\eqn{x}; and \eqn{V} is a matrix containing the right
+singular vectors of \eqn{x} (output follows the same
+notation convention as the \code{\link{svd}} function).
+
+\code{qrSVD} will attempt the standard \code{\link{svd}}
+function before preconditioning the matrix \eqn{x}.
+}
+\description{
+In order to generate the SVD of the matrix \code{x},
+\code{\link{qrSVD}} calls \code{\link{genQ}} to generate a
+random orthonormal matrix, and uses this random matrix to
+precondition \code{x}. The svd of the preconditioned matrix
+is calculated, and adjusted to account for the
+preconditioning process in order to find \code{svd(x)}.
+}
+\examples{
+x <-matrix(rnorm(3*5),nrow=3,ncol=5)
+svdx <- qrSVD(x)
+svdx
+}
+\seealso{
+\code{\link{fastSVD}}
+}
+

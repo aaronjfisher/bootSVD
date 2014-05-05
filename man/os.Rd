@@ -1,0 +1,22 @@
+\name{os}
+\alias{os}
+\title{Quickly print an R object's size}
+\usage{
+os(x, units = "Mb")
+}
+\arguments{
+  \item{x}{an object of interest}
+
+  \item{units}{measure to print size in}
+}
+\value{
+print(object.size(x),units=units)
+}
+\description{
+Quickly print an R object's size
+}
+\examples{
+Y<-simEEG(n=50)
+os(Y)
+}
+

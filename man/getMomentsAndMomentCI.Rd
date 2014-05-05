@@ -1,0 +1,68 @@
+\name{getMomentsAndMomentCI}
+\alias{getMomentsAndMomentCI}
+\title{Calculate bootstrap moments and moment-based confidence intervals for the PCs.}
+\usage{
+getMomentsAndMomentCI(AsByB, V, K = dim(AsByB[[1]])[2], talk = FALSE)
+}
+\arguments{
+  \item{AsByB}{a list of the bootstrap PC matrices for each
+  bootstrap sample. This list should be indexed by \eqn{b},
+  with the \eqn{b^{th}} element containing the results from
+  the \eqn{b^{th}} bootstrap sample.}
+
+  \item{V}{a (\eqn{p} by \eqn{n}) containing the coordinate
+  vectors for the matrices within the \code{AsByB} list,
+  where \eqn{n} is sample size and \eqn{p} is sample
+  dimension. Generally for bootstrap PCA, \code{AsByB}
+  should contain the PCs for the bootstrap scores, and
+  \code{V} should be the matrix containing the PCs of the
+  original sample.}
+
+  \item{K}{the number of leading PCs for which moments and
+  confidence intervals should be obtained.}
+
+  \item{talk}{setting to \code{TRUE} will cause the
+  function to print its progress in calculating the
+  bootstrap variance for each PC.}
+}
+\value{
+a list containing \item{EVs}{a list containing element-wise
+bootstrap means for each of the \code{K} fitted PCs,
+indexed by \code{k}.} \item{varVs}{a list containing
+element-wise bootstrap variances for each of the \code{K}
+fitted PCs, indexed by \code{k}.} \item{sdVs}{a list
+containing element-wise bootstrap standard errors for each
+of the \code{K} fitted PCs, indexed by \code{k}.}
+\item{momentCI}{a list of (\eqn{p} by \eqn{2}) matrices,
+indexed by \code{k}, where \code{momentCI[[k]][j,]} is the
+pointwise moment-based CI for the \eqn{j^{th}} element of
+the \eqn{k^{th}} PC.}
+}
+\description{
+Let \eqn{K} be the number of PCs of interest, let \eqn{B}
+be the number of bootstrap samples, and let \eqn{p} be the
+number of measurements per subject, also known as the
+dimension of the sample. In general, we use \eqn{k} to
+refer to the principal component (PC) index, where
+\eqn{k=1,2,...K}, and use \eqn{b} to refer to the bootstrap
+index, where \eqn{b=1,2,...B}.
+}
+\examples{
+#use small n, small B for a quick illustration
+set.seed(0)
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+svdY<-fastSVD(Y)
+V<-svdY$v #right singular vectors of the wide matrix Y
+DUt<- tcrossprod(diag(svdY$d),svdY$u)
+bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
+
+AsByB<-bootSVD_LD_output$As
+moments<-getMomentsAndMomentCI(AsByB,V,talk=TRUE)
+plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')
+matlines(moments$momentCI[[1]],col='blue',lty=1)
+
+#Can also use this function to get moments for low dimensional vectors A^b[,k], by setting V to the identity matrix.
+moments_A<- getMomentsAndMomentCI(As=AsByB,V=diag(nrow(AsByB[[1]])))
+}
+

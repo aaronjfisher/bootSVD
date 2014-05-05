@@ -1,0 +1,59 @@
+\name{As2Vs}
+\alias{As2Vs}
+\title{Convert low dimensional bootstrap components to high dimensional bootstrap components}
+\usage{
+As2Vs(As, V, mc.cores = 1, ...)
+}
+\arguments{
+  \item{As}{a list of the PCs matrices for each bootstrap
+  sample, indexed by \eqn{b}. Each element of this list
+  should be a (\eqn{n} by \eqn{K}) matrix, where \eqn{K} is
+  the number of PCs of interest, and \eqn{n} is the sample
+  size.}
+
+  \item{V}{a tall (\eqn{p} by \eqn{n}) matrix containing
+  the PCs of the original sample, where \eqn{n} is sample
+  size, and \eqn{p} is sample dimension.}
+
+  \item{mc.cores}{passed to \code{\link{mclapply}}, for
+  parallelizing the computation procedure.}
+
+  \item{...}{(optional) passed to \code{\link{mclapply}}.}
+}
+\value{
+a \code{B}-length list of (\code{p} by \code{K}) PC
+matrices on the original sample coordinate space (denoted
+here as \eqn{V^b}). This is achieved by the matrix
+multiplication \eqn{V^b=VA^b}. Note that here, \eqn{V^b}
+denotes the \eqn{b^{th}} bootstrap PC matrix, not \eqn{V}
+raised to the power \eqn{b}. This notation is the same as
+the notation used in (Fisher et al., 2014).
+}
+\description{
+Let \eqn{B} be the number of bootstrap samples, indexed by
+\eqn{b=1,2,...B}. \code{As2Vs} is a simple function
+converts the list of principal component (PC) matrices for
+the bootstrap scores to a list of principal component
+matrices on the original high dimensional space. Both of
+these lists, the input and the output of \code{As2Vs}, are
+indexed by \eqn{b}.
+}
+\examples{
+#use small n, small B for a quick illustration
+set.seed(0)
+Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
+svdY<-fastSVD(Y)
+DUt<- tcrossprod(diag(svdY$d),svdY$u)
+bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
+
+Vs<-As2Vs(As=bootSVD_LD_output$As,V=svdY$v)
+# Yields the high dimensional bootstrap PCs (left singular vectors of the bootstrap sample Y),
+# indexed by b = 1,2...B, where B is the number of bootstrap samples.
+}
+\references{
+Aaron Fisher, Brian Caffo, and Vadim Zipunnikov.
+\emph{Fast, Exact Bootstrap Principal Component Analysis
+for p>1 million}. Working Paper, 2014.
+}
+

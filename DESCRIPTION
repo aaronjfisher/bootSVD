@@ -1,0 +1,14 @@
+Package: bootSVD
+Title: Fast, Exact Bootstrap Principal Component Analysis for High Dimensional
+    Data
+Description: Fast, exact bootstrap Principal Component Analysis (and Singular
+    Value Decompositions) for high dimensional data
+Version: 0.1
+Author: Aaron Fisher <fisher@jhu.edu>
+Maintainer: Aaron Fisher <fisher@jhu.edu>
+VignetteBuilder: knitr
+Depends:
+    R (>= 3.0.2),
+    parallel
+License: GPL-2
+LazyData: true

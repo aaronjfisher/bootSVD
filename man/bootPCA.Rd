@@ -1,0 +1,24 @@
+\name{bootPCA}
+\alias{bootPCA}
+\title{Quickly calculates bootstrap PCA results (wrapper for bootSVD)}
+\usage{
+bootPCA(centerSamples = TRUE, ...)
+}
+\arguments{
+  \item{centerSamples}{whether each bootstrap sample should
+  be centered before computing the bootstrap principal
+  components.}
+
+  \item{...}{passed to \code{\link{bootSVD}}}
+}
+\value{
+\code{bootSVD(...)}
+}
+\description{
+All arguments are passed to \code{\link{bootSVD}}. This
+function should be used in exactly the same way as
+\code{\link{bootSVD}}. The only difference is that PCA
+typically involves re-centering each bootstrap sample,
+whereas calculations involving the SVD might not.
+}
+
