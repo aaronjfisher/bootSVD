@@ -3,8 +3,19 @@ bootSVD
 
 The R package bootSVD can be used to implement fast, exact bootstrap principal component analysis and singular value decompositions for high dimensional data (i.e. >1 million measurements per subject). The primary function in this package is the bootSVD function, for which we include a documented example based on sleep electroencephalogram (EEG) data.
 
+To install, type
+```S
+## if needed
+install.packages("devtools")
 
+## main package
+library(devtools)
+install_github('bootSVD','aaronjfisher')
 
+## to access help pages
+library(bootSVD)
+help(package=bootSVD)
+``` 
 <br/><br/>
 This package is based on the methodology outlined in:
 
