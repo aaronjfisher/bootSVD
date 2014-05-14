@@ -57,11 +57,12 @@ bootSVD(Y, K, V = NULL, d = NULL, U = NULL, B = 50,
   intervals for the PCs (both the \eqn{p}-dimensional
   components and the \eqn{n}-dimensional components). For
   example, \code{percentiles=c(.025,.975)} will result in
-  \eqn{95%} CIs.}
+  \eqn{95} percent CIs.}
 
-  \item{mc.cores}{passed to \code{\link{mclapply}}. Used
-  when transforming the \eqn{n}-dimensional PCs to the
-  \eqn{p}-dimensional PCs.}
+  \item{mc.cores}{passed to
+  \code{\link[parallel]{mclapply}}. Used when transforming
+  the \eqn{n}-dimensional PCs to the \eqn{p}-dimensional
+  PCs.}
 
   \item{centerSamples}{whether each bootstrap sample should
   be centered before calculating the SVD.}

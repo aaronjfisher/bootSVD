@@ -412,14 +412,15 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' \code{As2Vs} is a simple function converts the list of principal component (PC) matrices for the bootstrap scores to a list of principal component matrices on the original high dimensional space. Both of these lists, the input and the output of \code{As2Vs}, are indexed by \eqn{b}.
 #' @param As a list of the PCs matrices for each bootstrap sample, indexed by \eqn{b}. Each element of this list should be a (\eqn{n} by \eqn{K}) matrix, where \eqn{K} is the number of PCs of interest, and \eqn{n} is the sample size.
 #' @param V a tall (\eqn{p} by \eqn{n}) matrix containing the PCs of the original sample, where \eqn{n} is sample size, and \eqn{p} is sample dimension.
-#' @param mc.cores passed to \code{\link{mclapply}}, for parallelizing the computation procedure.
-#' @param ... (optional) passed to \code{\link{mclapply}}.
+#' @param mc.cores passed to \code{\link[parallel]{mclapply}}, for parallelizing the computation procedure.
+#' @param ... (optional) passed to \code{\link[parallel]{mclapply}}.
 #' @return a \code{B}-length list of (\code{p} by \code{K}) PC matrices on the original sample coordinate space (denoted here as \eqn{V^b}). This is achieved by the matrix multiplication \eqn{V^b=VA^b}. Note that here, \eqn{V^b} denotes the \eqn{b^{th}} bootstrap PC matrix, not \eqn{V} raised to the power \eqn{b}. This notation is the same as the notation used in (Fisher et al., 2014).
 #' @export
 #'
 #' @references
 #' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
 #'
+#' @import parallel
 #' @examples
 #' #use small n, small B for a quick illustration
 #' set.seed(0)
@@ -599,8 +600,8 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #' @param output a vector telling which descriptions of the bootstrap distribution should be calculated. Can include any of the following: 'initial_SVD','HD_moments', 'full_HD_PC_dist', 'full_LD_PC_dist', 'd_dist', and 'U_dist'. If \code{output} is set to 'all', then all bootstrap PCA results will be reported. See below for explanations of these outputs.
 #' @param talk If TRUE, the function will print progress during calculation procedure.
 #' @param bInds a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, where \code{B} is the number of bootstrap samples, and \code{n} is the sample size. The purpose of setting a specific bootstrap sampling index is to allow the results to be more easily compared against standard bootstrap PCA calculations. If entered, the \code{bInds} argument will override the \code{B} argument.
-#' @param percentiles a vector containing percentiles to be used to calculate element-wise percentile confidence intervals for the PCs (both the \eqn{p}-dimensional components and the \eqn{n}-dimensional components). For example, \code{percentiles=c(.025,.975)} will result in \eqn{95%} CIs.
-#' @param mc.cores passed to \code{\link{mclapply}}. Used when transforming the \eqn{n}-dimensional PCs to the \eqn{p}-dimensional PCs.
+#' @param percentiles a vector containing percentiles to be used to calculate element-wise percentile confidence intervals for the PCs (both the \eqn{p}-dimensional components and the \eqn{n}-dimensional components). For example, \code{percentiles=c(.025,.975)} will result in \eqn{95} percent CIs.
+#' @param mc.cores passed to \code{\link[parallel]{mclapply}}. Used when transforming the \eqn{n}-dimensional PCs to the \eqn{p}-dimensional PCs.
 #' @param centerSamples whether each bootstrap sample should be centered before calculating the SVD.
 #'
 #' @return Output is a list which can include any of the following elements, depending on what is specified in the \code{output} argument:

@@ -15,10 +15,12 @@ As2Vs(As, V, mc.cores = 1, ...)
   the PCs of the original sample, where \eqn{n} is sample
   size, and \eqn{p} is sample dimension.}
 
-  \item{mc.cores}{passed to \code{\link{mclapply}}, for
-  parallelizing the computation procedure.}
+  \item{mc.cores}{passed to
+  \code{\link[parallel]{mclapply}}, for parallelizing the
+  computation procedure.}
 
-  \item{...}{(optional) passed to \code{\link{mclapply}}.}
+  \item{...}{(optional) passed to
+  \code{\link[parallel]{mclapply}}.}
 }
 \value{
 a \code{B}-length list of (\code{p} by \code{K}) PC

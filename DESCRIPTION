@@ -6,9 +6,9 @@ Description: Fast, exact bootstrap Principal Component Analysis (and Singular
 Version: 0.1
 Author: Aaron Fisher <fisher@jhu.edu>
 Maintainer: Aaron Fisher <fisher@jhu.edu>
-VignetteBuilder: knitr
 Depends:
-    R (>= 3.0.2),
+    R (>= 3.0.2)
+Imports:
     parallel
 License: GPL-2
 LazyData: true
