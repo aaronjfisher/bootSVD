@@ -206,11 +206,11 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent'){
 	d<-sqrt(svdAAt$d) 
 	if(!flipped){
 		U <- svdAAt$u #left singular vectors of a wide matrix
-		V <- crossprod(A,svdAAt$u[,1:nv]) %*% diag(1/d[1:nv]) #right singular vectors of a wide matrix
+		V <- crossprod(A,as.matrix(svdAAt$u[,1:nv])) %*% diag(1/d[1:nv]) #right singular vectors of a wide matrix
 	}
 	if(flipped){ #if flipped, transpose the results back!
 		V <- svdAAt$u 
-		U <- crossprod(A,svdAAt$u[,1:nv]) %*% diag(1/d[1:nv])
+		U <- crossprod(A,as.matrix(svdAAt$u[,1:nv])) %*% diag(1/d[1:nv])
 	}
 	return(list(v=V,u=U,d=d))
 }
