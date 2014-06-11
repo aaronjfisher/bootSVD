@@ -14,9 +14,11 @@ install.packages("devtools")
 library(devtools)
 install_github('bootSVD','aaronjfisher')
 
-## to access help pages
 library(bootSVD)
+
+## to access help pages
 help(package=bootSVD)
+?bootSVD
 ``` 
 <br/><br/>
 
