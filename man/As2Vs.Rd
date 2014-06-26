@@ -56,6 +56,6 @@ Vs<-As2Vs(As=bootSVD_LD_output$As,V=svdY$v)
 \references{
 Aaron Fisher, Brian Caffo, and Vadim Zipunnikov.
 \emph{Fast, Exact Bootstrap Principal Component Analysis
-for p>1 million}. Working Paper, 2014.
+for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 }
 

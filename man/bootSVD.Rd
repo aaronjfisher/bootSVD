@@ -2,7 +2,7 @@
 \alias{bootSVD}
 \title{Calculates bootstrap distribution of PCA (i.e. SVD) results}
 \usage{
-bootSVD(Y, K, V = NULL, d = NULL, U = NULL, B = 50,
+bootSVD(Y = NULL, K, V = NULL, d = NULL, U = NULL, B = 50,
   output = "HD_moments", talk = TRUE, bInds = NULL,
   percentiles = c(0.025, 0.975), centerSamples = TRUE, mc.cores = 1)
 }
@@ -128,6 +128,16 @@ moment based confidence intervals for the PCs.}
 dimension (\eqn{n} by \eqn{2}). The \eqn{k^{th}} matrix in
 \code{LD_percentiles} contains element-wise percentile
 intervals for the \eqn{k^{th}} \eqn{n}-dimensional PC. }
+
+If the dimension of the sample is especially large (e.g.
+\eqn{p>10000}), operations involving the entire sample data
+matrix may require too much memory, creating computational
+bottlenecks. In these cases, the sample data can be
+partitioned into several smaller data files, and simple
+block matrix algebra can be used to compute the bootstrap
+distribution of the principal components. This matrix
+algebra is explained in more detail in section 1 of the
+supplemental materials of (Fisher et al., 2014)
 }
 \description{
 Applies fast bootstrap PCA, using the method from (Fisher
@@ -185,6 +195,6 @@ legend('bottomright','Sample Value',pch=18,col='red')
 \references{
 Aaron Fisher, Brian Caffo, and Vadim Zipunnikov.
 \emph{Fast, Exact Bootstrap Principal Component Analysis
-for p>1 million}. Working Paper, 2014.
+for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 }
 

@@ -22,7 +22,7 @@
 #'
 #'
 #' @references
-#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
+#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' Stuart F Quan, Barbara V Howard, Conrad Iber, James P Kiley, F Javier Nieto, George T O'Connor, David M Rapoport, Susan Redline, John Robbins, JM Samet, et al.\emph{ The sleep heart health study: design, rationale, and methods}. Sleep, 20(12):1077-1085, 1997. 1.1
 #'
@@ -39,7 +39,7 @@ NULL
 #' @seealso \code{\link{EEG_mu}}, \code{\link{EEG_score_var}}
 #'
 #' @references
-#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
+#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' Stuart F Quan, Barbara V Howard, Conrad Iber, James P Kiley, F Javier Nieto, George T O'Connor, David M Rapoport, Susan Redline, John Robbins, JM Samet, et al.\emph{ The sleep heart health study: design, rationale, and methods}. Sleep, 20(12):1077-1085, 1997. 1.1
 #'
@@ -57,7 +57,7 @@ NULL
 #'
 #'
 #' @references
-#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
+#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' Stuart F Quan, Barbara V Howard, Conrad Iber, James P Kiley, F Javier Nieto, George T O'Connor, David M Rapoport, Susan Redline, John Robbins, JM Samet, et al.\emph{ The sleep heart health study: design, rationale, and methods}. Sleep, 20(12):1077-1085, 1997. 1.1
 #'
@@ -98,7 +98,7 @@ NULL
 #'
 #'
 #' @references
-#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
+#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' Stuart F Quan, Barbara V Howard, Conrad Iber, James P Kiley, F Javier Nieto, George T O'Connor, David M Rapoport, Susan Redline, John Robbins, JM Samet, et al.\emph{ The sleep heart health study: design, rationale, and methods}. Sleep, 20(12):1077-1085, 1997. 1.1
 #'
@@ -418,7 +418,7 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' @export
 #'
 #' @references
-#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
+#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' @import parallel
 #' @examples
@@ -623,9 +623,10 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #'	\item{LD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{n} by \eqn{2}). The \eqn{k^{th}} matrix in \code{LD_percentiles} contains element-wise percentile intervals for the \eqn{k^{th}} \eqn{n}-dimensional PC.
 #' }
 #'
+#' If the dimension of the sample is especially large (e.g. \eqn{p>10000}), operations involving the entire sample data matrix may require too much memory, creating computational bottlenecks. In these cases, the sample data can be partitioned into several smaller data files, and simple block matrix algebra can be used to compute the bootstrap distribution of the principal components. This matrix algebra is explained in more detail in section 1 of the supplemental materials of (Fisher et al., 2014)
 #'
 #' @references
-#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. Working Paper, 2014.
+#' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' @export
 #' @examples
@@ -675,10 +676,13 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #' boxplot(dsByK[[k]]^2,main=paste0('Covariance Matrix Eigenvalue ',k),ylab='Bootstrap Distribution')
 #' points(b$initial_SVD$d[2]^2,pch=18,col='red')
 #' legend('bottomright','Sample Value',pch=18,col='red')
-bootSVD<-function(Y,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),centerSamples=TRUE,mc.cores=1){
+bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),centerSamples=TRUE,mc.cores=1){
 
 	#get initial SVD, if needed
-	notfullV<-TRUE
+	notfullV<-TRUE #indicator is not currently being used
+	warning_dim<-FALSE
+	if( max(dim(Y),dim(V))>10000 )
+		warning('Sample data matrix dimension greater than 10,000 can lead to very large memory requirements. To improve computational speed, consider partitioning the sample data, and using block matrix algebra, as described in section 1 of the supplemental materials for the primary bootstrap PCA paper (http://arxiv.org/abs/1405.0922)')
 	if(!is.null(V)) if(dim(V)[2] == dim(U)[2]) notfullV<-FALSE
 	if(any(is.null(V),is.null(d),is.null(U))){
 		#convert Y to a wide matrix, for ease of coding with svd()

@@ -81,7 +81,7 @@ matplot(EEG_leadingV,type='l',lty=1,main='Population PCs')
 \references{
 Aaron Fisher, Brian Caffo, and Vadim Zipunnikov.
 \emph{Fast, Exact Bootstrap Principal Component Analysis
-for p>1 million}. Working Paper, 2014.
+for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 
 Stuart F Quan, Barbara V Howard, Conrad Iber, James P
 Kiley, F Javier Nieto, George T O'Connor, David M Rapoport,
