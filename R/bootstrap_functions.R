@@ -1,8 +1,10 @@
 # A note on dependencies: 
 	#parallel is used for mclappy, in As2Vs.
-	#MASS was required for previous version of simEEG, but this is now handled with just multiplying a matrix of normal noise by a diagonal stdev matrix.
-
+	#ff is used to store large matrices
+		# bootstrap PCs are stored as a B-length list
+		# of pxK matrices
 # Possible future additions: Add timer to bootSVD function
+
 
 
 
@@ -117,13 +119,15 @@ NULL
 #' head(cumsum(d^2)/sum(d^2),5) #first 5 PCs explain about half the variation
 #'
 #' # Compare fitted PCs to true, generating basis vectors
-#' # Since PCs have arbitrary sign, we match the sign of the fitted sample PCs to the population PCs first
+#' # Since PCs have arbitrary sign, we match the sign of 
+#' # the fitted sample PCs to the population PCs first
 #' V_sign_adj<- array(NA,dim=dim(V))
 #' for(i in 1:5){
 #' 	V_sign_adj[,i]<-V[,i] * sign(crossprod(V[,i],EEG_leadingV[,i]))
 #' }
 #' par(mfrow=c(1,2))
-#' matplot(V_sign_adj[,1:5],type='l',lty=1,main='PCs from simulated data,\n sign adjusted')
+#' matplot(V_sign_adj[,1:5],type='l',lty=1,
+#' 		main='PCs from simulated data,\n sign adjusted')
 #' matplot(EEG_leadingV,type='l',lty=1,main='Population PCs')
 #Up to sign changes, the fitted sample PCs resemble the population PCs
 simEEG<-function(n=100, centered=TRUE, propVarNoise=.45,wide=TRUE){
@@ -164,9 +168,11 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 #'
 #' \code{fastSVD} uses the inherent low dimensionality of a wide, or tall, matrix to quickly calculate its SVD. For a matrix \eqn{A}, this function solves \eqn{svd(A)=UDV'}.
 #'
-#' @param A matrix of dimension (\eqn{n} by \eqn{m}).
+#' @param A matrix of dimension (\eqn{n} by \eqn{m}). This can be either of class \code{matrix} or \code{ff}.
 #' @param nv number of high dimensional singular vectors to obtain. If \eqn{n>m}, this is the number of \eqn{n}-dimensional left singular vectors to be computed. If \eqn{n<m}, this is the number of \eqn{m}-dimensional right singular vectors to be computed.
 #' @param warning_type passed to \code{\link{qrSVD}}, which calculates \code{svd(tcrossprod(A))}
+#' @param center_A  Whether the matrix \code{A} should be centered before taking it's SVD. Centering is done along whichever dimension of the matrix (\code{A}) is larger, assuming that there are more measurements per subject than there are subjects. This centering is implemented as a low dimensional operation that does not overwrite the original matrix \code{A}.
+#' @param pattern passed to \code{\link{ff}}. When \code{A} is of class \code{ff}, the returned high dimensional singular vectors are also of class \code{ff}. \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.
 #'
 #' @return Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSVD} solves \eqn{svd(A)=UDV'}, where \eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. For matrices where one dimension is substantially large than the other, calculation times are considerably faster than the standard \code{svd} function.
 #'
@@ -180,40 +186,187 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 #' V<-svdY$v #sample PCs for a wide matrix are the right singular vectors
 #' matplot(V[,1:5],type='l',lty=1) #PCs from simulated data
 #'
-#' #Note: For a tall, demeaned matrix Y, with columns corresponding to subjects and rows to measurements, 
+#' #Note: For a tall, demeaned matrix Y, with columns corresponding 
+#' #to subjects and rows to measurements, 
 #' #the PCs are the high dimensional left singular vectors.
-fastSVD<-function(A,nv=min(dim(A)),warning_type='silent'){ 
-	N<-dim(A)[1]
-	p<-dim(A)[2]
-	flipped<-FALSE
+fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, pattern=NULL){ 
+	N<-min(dim(A))
+	p<-max(dim(A))
+	tall<- dim(A)[1] == p #tall, or big square.
 	if(p==N) warning('for square matrix A, this function offers no speed improvement')
-	if(p < N){ #for con
-		A<-t(A)
-		flipped<-TRUE #convert back at the end
-	}
-	#N and p are no longer used
-
-	#get AA'
-	AAt<- tcrossprod(A)
-	#get svd for AA' = UDV'VDU'=U D^2 U'
+	if(center_A & all(dim(A)==p)) warning('Not clear whether to center rows or columns of A. Currently centering rows of A.')
+	
+	#get AA', or A'A, whichever is (N by N)
+	#Let Vn denote N-dim singular vectors, Vp denote p-dim singular vectors, and d denote the singular values.
+	if(!tall) AA_NxN<- ffmatrixmult(A,xt=FALSE,yt=TRUE)
+	if( tall) AA_NxN<- ffmatrixmult(A,xt=TRUE,yt=FALSE)
+	#For example, suppose AA_NxN = AA', then:
+	#svd for AA' = UDV'VDU'=U D^2 U'= Vn D^2 Vn'
 	#note, we have D=diag(d), where d is a vector and D is a matrix
-	svdAAt<-qrSVD(AAt,warning_type=warning_type)
-	#start with svd(AA')= UD^2 U'
+	if( center_A) M <- diag(N)-matrix(1/N,N,N)
+	if(!center_A) M <- diag(N)
 
-	#Solve for V:
-	#A=UDV' => (D^-1)(U')A=V' => A'UD^-1 = V
+	AA_NxN <- M %*% AA_NxN %*% M 
+	#above step is equivalent to de_meaning A before taking SVD
+	#unless center_A=FALSE, in which case there's no effect.
+
+	svdAA_NxN<-qrSVD(as.matrix(AA_NxN),warning_type=warning_type) 
+
+	#Solve for Vp:
+	#wide A: A=Vn D Vp' => (D^-1)(Vn')A=V' => A'(Vn)(D^-1) = Vp
+	#tall A: A=Vp D Vn'			 => 		  A (Vn)(D^-1) = Vp 
+	#(same results whether A is wide or tall)
+	#Or, if we de_mean A with matrix M=de_meaner:
+	#wide A:  A'M Vn (D^-1)= Vp
+	#tall A:  A M Vn (D^-1)= Vp 
 	# arbitrary sign changes in columns of U won't affect anything, they'll just translate into arbitrary sign changes of V columns.
-	d<-sqrt(svdAAt$d) 
-	if(!flipped){
-		U <- svdAAt$u #left singular vectors of a wide matrix
-		V <- crossprod(A,as.matrix(svdAAt$u[,1:nv])) %*% diag(1/d[1:nv]) #right singular vectors of a wide matrix
+	d<-sqrt(svdAA_NxN$d) 
+	Vn<-as.matrix(svdAA_NxN$u[,1:nv])
+	if(nv >1) Dinv <-      diag(1/d[1:nv])
+	if(nv==1) Dinv <- as.matrix(1/d[1:nv])
+	Vp <- ffmatrixmult(A, (M %*% Vn %*% Dinv), xt=(!tall),yt=FALSE, pattern=pattern)
+	
+	# In svd() convention: A=UDV'
+	# (regardless of whether A is wide or tall)
+	if(!tall){
+		return(list(v=Vp,u=svdAA_NxN$u,d=d)) #U is short, V is long
 	}
-	if(flipped){ #if flipped, transpose the results back!
-		V <- svdAAt$u 
-		U <- crossprod(A,as.matrix(svdAAt$u[,1:nv])) %*% diag(1/d[1:nv])
+	if(tall){ 
+		return(list(v=svdAA_NxN$u, u=Vp, d=d)) #U is long, V is short
 	}
-	return(list(v=V,u=U,d=d))
+	
 }
+
+
+#' Matrix multiplication with "ff_matrix" or "matrix" inputs
+#'
+#' One function for %*%, crossprod, and tcrossprod, that is compatible with ff_matrices. Multiplication is done without creating new matrices for t(x) or t(y). Note, the crossproduct function can't be applied directly to objects of class \code{ff_matrix}. 
+#'
+#' @param x a matrix or ff_matrix
+#' @param y a matrix or ff_matrix. If NULL, this is indirectly set equal to x, although a second copy of the matrix x is not actually stored.
+#' @param xt should the x matrix be transposed before multiplying
+#' @param yt should the y matrix be transposed before multiplying (e.g. xt=TRUE, yt=FALSE leads to x'y).
+#' @param ram.output force output to be a normal matrix, as opposed to an object of class \code{ff_matrix}.
+#' @param override.big.error If the dimension of the final output matrix is especially large, \code{ffmatrixmult} will abort, giving an error. This is meant to avoid the accidental creation of very large matrices. Set override.big.error=TRUE to bypass this error.
+#' @param ... passed to \code{\link{ff}} when creating
+#' @export
+#' @import ff
+#' @return x'y or xy', depending on value of transpose. If one of the output matrix dimensions is large, the output will be stored as an ff object.
+#' @examples \dontrun{
+#' 	#Tall data
+#' 	y_tall<-matrix(rnorm(5000),500,10) #y tall
+#' 	x_tall<-matrix(rnorm(5000),500,10)
+#' 	y_wide<-t(y_tall)
+#' 	x_wide<-t(x_tall)
+#' 	y_tall_ff<-as.ff(y_tall) #y tall and ff
+#' 	x_tall_ff<-as.ff(x_tall) 
+#' 	y_wide_ff<-as.ff(y_wide) #y tall and ff
+#' 	x_wide_ff<-as.ff(x_wide) 
+#'
+#'   #Set options to ensure that block matrix algebra is actually done,
+#'   #and the entire algebra isn't just one in one step.
+#'   options('ffbatchsize'=100)
+#'
+#'   	#small final matrices
+#' 	#x'x
+#' 	range(  crossprod(x_tall) - ffmatrixmult(x_tall_ff, xt=TRUE)  )
+#' 	range(  tcrossprod(x_wide) - ffmatrixmult(x_wide_ff, yt=TRUE)  )
+#' 	range(  crossprod(x_tall,y_tall) - ffmatrixmult(x_tall_ff,y_tall_ff, xt=TRUE)  )
+#' 	range(  tcrossprod(x_wide,y_wide) - ffmatrixmult(x_wide_ff,y_wide_ff, yt=TRUE)  )
+#' 	range(  (x_wide%*%y_tall) - ffmatrixmult(x_wide_ff,y_tall_ff)  )
+#'
+#' 	#ff + small data
+#' 	s_tall <- matrix(rnorm(80),10,8) 
+#' 	s_wide <- matrix(rnorm(80),8,10) 
+#'
+#' 	#tall output
+#' 	range(  crossprod(x_wide, s_tall) - ffmatrixmult(x_wide_ff, s_tall,xt=TRUE)[]  )
+#' 	range(  tcrossprod(x_tall, s_wide) - ffmatrixmult(x_tall_ff, s_wide,yt=TRUE)[]  )
+#' 	range( x_tall%*%s_tall - ffmatrixmult(x_tall_ff, s_tall)[])
+#'
+#' 	#Wide output
+#' 	range(  crossprod(s_tall, y_wide) - ffmatrixmult( s_tall, y_wide_ff,xt=TRUE)[]  )
+#' 	range(  tcrossprod(s_wide, y_tall) - ffmatrixmult( s_wide,y_tall_ff,yt=TRUE)[]  )
+#' 	range( s_wide%*%y_wide - ffmatrixmult(s_wide,y_wide_ff)[])
+#'
+#' class(ffmatrixmult( s_wide,y_tall_ff,yt=TRUE,FF_RETURN=TRUE)  	)
+#'  	#Reset options for more practical use
+#'   options('ffbytesize'=16777216)
+#'
+#'}
+ffmatrixmult <- function(x,y=NULL,xt=FALSE,yt=FALSE,ram.output=FALSE, override.big.error=FALSE,...) {	
+
+	dimx<-dim(x)
+	if(!is.null(y)) dimy<-dim(y)
+	if(is.null(y))  dimy<-dimx
+
+	p <- max(c(dimx,dimy))
+	n <- max(min(dimx),min(dimy)) #We assume that both in put matrices have at least one dimension that is managably small. Will allow only 1 dimension of the final output to be greater than n. For two wide or tall matrices as inputs, this ensures that the output is also wide or tall (not large in both dimenions).
+
+	#Find the dimension of the final output (outDim)
+	#Check to make sure the "inner dimension" (inDim) that we multiply on matches in these two matrices.
+	outDim <-
+	inDim  <- rep(NA,2)
+	outDim[1] <- dimx[xt+1]
+	outDim[2] <- dimy[2-yt]
+	inDim[1] <- dimx[2-xt]
+	inDim[2] <- dimy[yt+1]
+	if(inDim[1]!=inDim[2]) stop('non-conformable arguments')
+
+	if(all(outDim>n) & (!override.big.error)) stop('Returned value is at risk of being extremely large. Both dimensions of output will be fairly large.')
+
+	if(xt & yt) stop('For ff matrix algebra, set only one of xt or yt to TRUE')
+
+
+	if(all(outDim==n) | (!'ff'%in% c(class(x),class(y)))|ram.output){ 
+		out <- matrix(0,outDim[1],outDim[2])
+	}else{
+		out <- ff(0,dim=outDim,...)
+	}
+
+	if(all(outDim==n)){ #Output is square, inDim has the HD part
+		if( (xt) &(!yt)) ffapply({
+			out<-out+crossprod(x[i1:i2,], y[i1:i2,])
+			},X=x,MARGIN=1)
+		if((!xt) & (yt)) ffapply({
+			out<-out+tcrossprod(x[,i1:i2], y[,i1:i2])
+			},X=x,MARGIN=2)
+		if((!xt) &(!yt)) ffapply({
+			out<-out+x[,i1:i2]%*% y[i1:i2,]
+			},X=x,MARGIN=2)
+		#Note, if y=NULL, then y[i1:i2,]=NULL, and crossprod will ignore it
+	}
+	if(outDim[1]>outDim[2] | (outDim[1]==p & outDim[2]==p)){ #output is tall, or big & square
+		if( (xt) & (!yt)) ffapply({
+			out[i1:i2,]<-crossprod(x[,i1:i2], y)
+			},X=x,MARGIN=2)
+		if((!xt) &  (yt)) ffapply({
+			out[i1:i2,]<-tcrossprod(x[i1:i2,], y)
+			},X=x,MARGIN=1)
+		if((!xt) & (!yt)) ffapply({
+			out[i1:i2,]<-x[i1:i2,]%*% y
+			},X=x,MARGIN=1)
+		#Here, if y=NULL, we would've already gotten an error
+	}
+	if(outDim[1]< outDim[2]){ 
+		if( (xt) & (!yt))  ffapply({
+			out[,i1:i2]<-crossprod(x, y[,i1:i2])
+			},X=y,MARGIN=2)
+		if((!xt) &  (yt))  ffapply({
+			out[,i1:i2]<-tcrossprod(x, y[i1:i2,])
+			},X=y,MARGIN=1)
+		if((!xt) & (!yt))  ffapply({
+			out[,i1:i2]<- x %*% y[,i1:i2]
+			},X=y,MARGIN=2)
+		#Here, if y=NULL, we would've already gotten an error
+	}
+	return(out)
+}
+
+
+
+
+
 
 
 
@@ -431,23 +584,29 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
 #'
 #' Vs<-As2Vs(As=bootSVD_LD_output$As,V=svdY$v)
-#' # Yields the high dimensional bootstrap PCs (left singular vectors of the bootstrap sample Y), 
-#' # indexed by b = 1,2...B, where B is the number of bootstrap samples.
-As2Vs<-function(As,V,mc.cores=1, ...){
-	B<-length(As)
-	Vs<-mclapply(1:B, FUN=function(b)  V %*% As[[b]],mc.cores=mc.cores, ...)
-	return(Vs)
+#' # Yields the high dimensional bootstrap PCs (left singular 
+#' # vectors of the bootstrap sample Y), 
+#' # indexed by k = 1,2...K, where K is the number of PCs of interest.
+As2Vs<-function(AsByB, V, pattern=NULL, ...){
+	B<-length(AsByB)
+	VsByB<-list()
+	DUMP<-mclapply(1:B, FUN=function(b){
+			VsByB[[b]]<<-ffmatrixmult(V,AsByB[[b]],xt=FALSE,yt=FALSE, pattern=paste0(pattern,b,'_'))
+			if('ff' %in% class(VsByB[[b]])) close(VsByB[[b]])
+		},mc.cores=getOption('bootSVD.mc.cores',1), ...) #default ffmatrixmult uses a random tempfile name to store each matrix (for big matrices).
+	return(VsByB)
 }
 
-
-#' Allows for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
+#' Used for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
 #'
-#' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{\link{getMomentsAndMomentCI}}.
+#' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{\link{getMomentsAndMomentCI}}.
 #'
-#' @param PCsByB a \code{B}-length list of (\code{r} by \code{K}) bootstrap PCs matrices for each bootstrap sample, where \code{K} is the number of PCs of interest and \code{B} is the number of bootstrap samples. These may refer to the '\eqn{n}-dimensional' components \eqn{A^b} (i.e. \eqn{r:=n}), or to the high dimensional components \eqn{V^b} (i.e. \eqn{r:=p}). In both cases, the input matrices should be indexed by \eqn{b}, where \eqn{b=1,2,...B}.
-#' @return a \code{K}-length list of (\eqn{B} by \eqn{r}) PC matrices. If \code{PCsByK} is the output of \code{reindexPCsByK}, then \code{PCsByK[[k]][b,]} is the \eqn{k^{th}} fitted PC from the \code{b^{th}} bootstrap sample. This allows for quick estimation of low dimensional moments, or percentiles. Moments can also be directly calculated by the \code{\link{getMomentsAndMomentCI}} function.
+#' @param vectorsByB a \code{B}-length list of (\code{r} by \code{K}) matrices of vector output for each bootstrap sample, where \code{K} is the number of vectors of interest and \code{B} is the number of bootstrap samples. An element of \code{vectorsByB} might refer to the matrix of '\eqn{n}-dimensional' components \eqn{A^b} (i.e. \eqn{r:=n}), to the high dimensional components \eqn{V^b} (i.e. \eqn{r:=p}), or to the matrix of '\eqn{n}-dimensional' scores \eqn{U^b}. In all cases, the input matrices should be indexed by \eqn{b}, where \eqn{b=1,2,...B}, and \eqn{B} denotes the number of bootstrap samples.
+#' @param pattern if elements of \code{vectorsByB} are of class \code{ff} object, then the returned, reordered vectors will also be class \code{ff} objects. \code{pattern} is passed to \code{\link{ff}} when creating these \code{ff} objects.
+#' @return a \code{K}-length list of (\eqn{B} by \eqn{r}) PC matrices. If \code{PCsByK} is the output of \code{reindexVectorsByK}, then \code{PCsByK[[k]][b,]} is the \eqn{k^{th}} fitted PC from the \code{b^{th}} bootstrap sample. This allows for quick estimation of low dimensional moments, or percentiles. Moments can also be directly calculated by the \code{\link{getMomentsAndMomentCI}} function.
 #'
 #' @export
+#' @import ff
 #'
 #' @examples
 #' #use small n, small B for a quick illustration
@@ -467,13 +626,18 @@ As2Vs<-function(As,V,mc.cores=1, ...){
 #' meanA1<-	apply(AsByK[[1]],2,mean)
 #' seA1<-	apply(AsByK[[1]],2,sd)
 #' pA1<-	apply(AsByK[[1]],2,function(x) quantile(x,.05))
-#' #can also use lapply to get a list (indexed by k=1,...K) of the means, standard errors, or percentiles for each PC. See example below, for high dimensional bootstrap PCs.
+#' #can also use lapply to get a list (indexed by k=1,...K) of 
+#' #the means, standard errors, or percentiles for each PC. 
+#' #See example below, for high dimensional bootstrap PCs.
 #'
 #' #Alternatively, moments can be calculated with
-#' seA1_v2<- getMomentsAndMomentCI(As=AsByB,V=diag(dim(AsByB[[1]])[1]))$sdPCs[[1]]
+#' seA1_v2<- getMomentsAndMomentCI(As=AsByB,
+#' 		V=diag(dim(AsByB[[1]])[1]))$sdPCs[[1]]
 #' all(seA1_v2==seA1)
 #'
-#' #Additional examples of exploring the low dimensional bootstrap PC distribution are given in the documentation for the 'bootSVD' function.
+#' #Additional examples of exploring the low dimensional bootstrap 
+#' #PC distribution are given in the documentation for 
+#' #the 'bootSVD' function.
 #' #########
 #'
 #' #########
@@ -561,7 +725,8 @@ reindexDsByK<-function(dsByB){
 #' plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')
 #' matlines(moments$momentCI[[1]],col='blue',lty=1)
 #'
-#' #Can also use this function to get moments for low dimensional vectors A^b[,k], by setting V to the identity matrix.
+#' #Can also use this function to get moments for low dimensional
+#' #vectors A^b[,k], by setting V to the identity matrix.
 #' moments_A<- getMomentsAndMomentCI(As=AsByB,V=diag(nrow(AsByB[[1]])))
 getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 	AsByK<-reindexPCsByK(AsByB)
@@ -648,13 +813,16 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #'
 #' #plot several draws from bootstrap distribution
 #' VsByK<-reindexPCsByK(b$full_HD_PC_dist)
-#' matplot(t(VsByK[[k]][1:20,]),type='l',lty=1,main=paste0('20 Draws from bootstrap\ndistribution of HD PC ',k))
+#' matplot(t(VsByK[[k]][1:20,]),type='l',lty=1,
+#' 		main=paste0('20 Draws from bootstrap\ndistribution of HD PC ',k))
 #'
 #' #plot pointwise CIs
-#' matplot(b$HD_moments$momentCI[[k]],type='l',col='blue',lty=1,main=paste0('CIs For HD PC ',k))
+#' matplot(b$HD_moments$momentCI[[k]],type='l',col='blue',lty=1,
+#' 		main=paste0('CIs For HD PC ',k))
 #' matlines(b$HD_percentiles[[k]],type='l',col='darkgreen',lty=1)
 #' lines(b$initial_SVD$V[,k])
-#' legend('topright',c('Fitted PC','Moment CIs','Percentile CIs'),lty=1,col=c('black','blue','darkgreen'))
+#' legend('topright',c('Fitted PC','Moment CIs','Percentile CIs'),
+#' 		lty=1,col=c('black','blue','darkgreen'))
 #' abline(h=0,lty=2,col='darkgrey')
 #'
 #' ######
@@ -662,13 +830,18 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #'
 #' # plot several draws from bootstrap distribution
 #' AsByK<-reindexPCsByK(b$full_LD_PC_dist)
-#' matplot(t(AsByK[[k]][1:50,]),type='l',lty=1,main=paste0('50 Draws from bootstrap\ndistribution of LD PC ',k),xlim=c(1,10),xlab='PC index (truncated)')
+#' matplot(t(AsByK[[k]][1:50,]),type='l',lty=1,
+#' 		main=paste0('50 Draws from bootstrap\ndistribution of LD PC ',k),
+#'		xlim=c(1,10),xlab='PC index (truncated)')
 #'
 #' # plot pointwise CIs
-#' matplot(b$LD_moments$momentCI[[k]],type='o',col='blue',lty=1,main=paste0('CIs For LD PC ',k),xlim=c(1,10),xlab='PC index (truncated)',pch=1)
+#' matplot(b$LD_moments$momentCI[[k]],type='o',col='blue',
+#' 		lty=1,main=paste0('CIs For LD PC ',k),xlim=c(1,10),
+#' 		xlab='PC index (truncated)',pch=1)
 #' matlines(b$LD_percentiles[[k]],type='o',pch=1,col='darkgreen',lty=1)
 #' abline(h=0,lty=2,col='darkgrey')
-#' legend('topright',c('Moment CIs','Percentile CIs'),lty=1,pch=1,col=c('blue','darkgreen'))
+#' legend('topright',c('Moment CIs','Percentile CIs'),lty=1,
+#' 		pch=1,col=c('blue','darkgreen'))
 #' #Note: variability is mostly due to rotations with the third and fourth PC.
 #'
 #' # Bootstrap eigenvalue distribution
