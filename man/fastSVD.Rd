@@ -3,27 +3,31 @@
 \alias{fastSVD}
 \title{Fast SVD of a wide or tall matrix}
 \usage{
-fastSVD(A, nv = min(dim(A)), warning_type = "silent",
-  backingpath = tempdir(), center_A = FALSE, pattern = NULL)
+fastSVD(A, nv = min(dim(A)), warning_type = "silent", center_A = FALSE,
+  pattern = NULL)
 }
 \arguments{
 \item{A}{matrix of dimension (\eqn{n} by \eqn{m}). This can be either of class \code{matrix} or \code{ff}.}
 
 \item{nv}{number of high dimensional singular vectors to obtain. If \eqn{n>m}, this is the number of \eqn{n}-dimensional left singular vectors to be computed. If \eqn{n<m}, this is the number of \eqn{m}-dimensional right singular vectors to be computed.}
 
-\item{warning_type}{passed to \code{\link{qrSVD}}, which calculates \code{svd(tcrossprod(A))}}
+\item{warning_type}{passed to \code{\link{qrSVD}}, which calculates either \code{svd(tcrossprod(A))} or \code{svd(crossprod(A))}, whichever is of lower dimension.}
 
-\item{backingpath}{directory to store output if \code{A} is of class \code{ff_matrix}.}
+\item{center_A}{Whether the matrix \code{A} should be centered before taking it's SVD. Centering is done along whichever dimension of \code{A} is larger. For example, if \code{A} is tall, then setting \code{center_A=TRUE} will return the SVD of \code{A} after centering the rows of \code{A}. This centering is implemented as a low dimensional matrix operation that does not require creating a copy of the original matrix \code{A}.}
 
-\item{center_A}{Whether the matrix \code{A} should be centered before taking it's SVD. Centering is done along whichever dimension of the matrix (\code{A}) is larger, assuming that there are more measurements per subject than there are subjects. This centering is implemented as a low dimensional operation that does not overwrite the original matrix \code{A}.}
+\item{pattern}{passed to \code{\link{ff}}. When \code{A} has class \code{ff}, the returned high dimensional singular vectors will also have class \code{ff}. \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.
 
-\item{pattern}{passed to \code{\link{ff}}. When \code{A} is of class \code{ff}, the returned high dimensional singular vectors are also of class \code{ff}. \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.}
+#'}
 }
 \value{
-Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSVD} solves \eqn{svd(A)=UDV'}, where \eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. For matrices where one dimension is substantially large than the other, calculation times are considerably faster than the standard \code{svd} function.
+Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSVD} solves \eqn{svd(A)=UDV'}, where \eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. When \code{A} is entered as an \code{ff} object, the high dimensional singular vectors of \code{A} will be returned as an \code{ff} object as well. For matrices where one dimension is substantially large than the other, calculation times are considerably faster than the standard \code{svd} function.
 }
 \description{
 \code{fastSVD} uses the inherent low dimensionality of a wide, or tall, matrix to quickly calculate its SVD. For a matrix \eqn{A}, this function solves \eqn{svd(A)=UDV'}.
+This function can be applied to either standard matrices, or, when the data is too large to be stored in memeory, to matrices with class \code{\link{ff}}. \code{\link{ff}} objects have a representation in memory, but store their contents on disk. In these cases, \code{fastSVD} will implement block matrix algebra to compute the SVD.
+}
+\details{
+Users might also consider changing the global options \code{ffbatchbytes}, from the \code{ff} package. When a \code{ff} object is entered, the \code{ffbatchbytes} option determines the block size for the block matrix algebra used to calculate the SVD.
 }
 \examples{
 Y<-simEEG(n=100,centered=TRUE,wide=TRUE)
@@ -34,5 +38,12 @@ matplot(V[,1:5],type='l',lty=1) #PCs from simulated data
 #Note: For a tall, demeaned matrix Y, with columns corresponding
 #to subjects and rows to measurements,
 #the PCs are the high dimensional left singular vectors.
+
+#Example with 'ff'
+dev.off()
+library(ff)
+Yff<-as.ff(Y)
+Vff<-fastSVD(Yff)$v
+matplot(Vff[,1:5],type='l',lty=1)
 }
 

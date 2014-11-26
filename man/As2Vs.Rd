@@ -10,7 +10,7 @@ As2Vs(AsByB, V, pattern = NULL, ...)
 
 \item{V}{a tall (\eqn{p} by \eqn{n}) matrix containing the PCs of the original sample, where \eqn{n} is sample size, and \eqn{p} is sample dimension.}
 
-\item{pattern}{if \code{V} is a class \code{ff} object, the returned value will also be a class \code{ff} object. \code{patern} is passed to \code{\link{ff}} in creation of the output.}
+\item{pattern}{if \code{V} is a class \code{ff} object, the returned value will also be a class \code{ff} object. \code{pattern} is passed to \code{\link{ff}} in creation of the output.}
 
 \item{...}{passed to \code{\link{mclapply}}.}
 }

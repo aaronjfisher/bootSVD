@@ -8,7 +8,7 @@ bootSVD_LD(UD, DUt = t(UD), bInds = genBootIndeces(B = 1000, n =
   centerSamples = TRUE)
 }
 \arguments{
-\item{UD}{a (\eqn{n} by \eqn{n}) matrix of scores, were rows denote individuals, and columns denote measurements in the PC space.}
+\item{UD}{(optional) a (\eqn{n} by \eqn{n}) matrix of scores, were rows denote individuals, and columns denote measurements in the PC space.}
 
 \item{DUt}{the transpose of \code{UD}. If both \code{UD} and \code{UDt} are entered and \code{t(UD)!=DUt}, the \code{DUt} argument will override the \code{UD} argument.}
 
@@ -18,7 +18,7 @@ bootSVD_LD(UD, DUt = t(UD), bInds = genBootIndeces(B = 1000, n =
 
 \item{warning_type}{passed to \code{\link{qrSVD}}, when taking the SVD of the low dimensional bootstrap score matrices.}
 
-\item{talk}{setting this to \code{TRUE} will cause a progress bar to appear.}
+\item{talk}{if \code{TRUE}, a progress bar will appear.}
 
 \item{centerSamples}{whether each bootstrap sample should be centered before calculating the SVD.}
 }
@@ -31,7 +31,7 @@ For each bootstrap matrix \eqn{(DU')^b}, let \eqn{svd(DU')=:A^b D^b U^b}, where 
 If the score matrix is inputted to \code{bootSVD_LD}, the results can be transformed to get the PCs on the original space by multiplying each matrix \eqn{A^b} by the PCs of the original sample, \eqn{V} (see \code{\link{As2Vs}}). The bootstrap scores of the original sample are equal to \eqn{U^b D^b}.
 }
 \description{
-\code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Some users may want to instead consider using \code{\link{bootSVD}}, which calls \code{bootSVD_LD}, and also calculates descriptions of the high dimensional components.
+\code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Most users may want to instead consider using \code{\link{bootSVD}}, which also calculates descriptions of the high dimensional components. Note that \code{\link{bootSVD}} calls \code{bootSVD_LD}.
 }
 \examples{
 #use small n, small B for a quick illustration

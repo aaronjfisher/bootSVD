@@ -8,7 +8,7 @@ getMomentsAndMomentCI(AsByK, V, K = length(AsByK), talk = FALSE)
 \arguments{
 \item{AsByK}{a list of the bootstrap PC matrices. This list should be indexed by \eqn{k}, with the \eqn{k^{th}} element of the lsit containing a \eqn{b} by \eqn{p} matrix of results for the \eqn{k^{th}} PC, across bootstrap samples.}
 
-\item{V}{a (\eqn{p} by \eqn{n}) containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix containing the PCs of the original sample.}
+\item{V}{a (\eqn{p} by \eqn{n}) matrix containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix of PCs from the original sample.}
 
 \item{K}{the number of leading PCs for which moments and confidence intervals should be obtained.}
 
@@ -35,7 +35,7 @@ bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
 bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
 
 AsByB<-bootSVD_LD_output$As
-AsByK<-reindexVectorsByK(AsByB)
+AsByK<-reindexMatricesByK(AsByB)
 moments<-getMomentsAndMomentCI(AsByK,V,talk=TRUE)
 plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')
 matlines(moments$momentCI[[1]],col='blue',lty=1)

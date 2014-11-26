@@ -166,15 +166,18 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 
 #' Fast SVD of a wide or tall matrix
 #'
-#' \code{fastSVD} uses the inherent low dimensionality of a wide, or tall, matrix to quickly calculate its SVD. For a matrix \eqn{A}, this function solves \eqn{svd(A)=UDV'}.
+#' \code{fastSVD} uses the inherent low dimensionality of a wide, or tall, matrix to quickly calculate its SVD. For a matrix \eqn{A}, this function solves \eqn{svd(A)=UDV'}. 
+#' This function can be applied to either standard matrices, or, when the data is too large to be stored in memeory, to matrices with class \code{\link{ff}}. \code{\link{ff}} objects have a representation in memory, but store their contents on disk. In these cases, \code{fastSVD} will implement block matrix algebra to compute the SVD.
 #'
 #' @param A matrix of dimension (\eqn{n} by \eqn{m}). This can be either of class \code{matrix} or \code{ff}.
 #' @param nv number of high dimensional singular vectors to obtain. If \eqn{n>m}, this is the number of \eqn{n}-dimensional left singular vectors to be computed. If \eqn{n<m}, this is the number of \eqn{m}-dimensional right singular vectors to be computed.
-#' @param warning_type passed to \code{\link{qrSVD}}, which calculates \code{svd(tcrossprod(A))}
-#' @param center_A  Whether the matrix \code{A} should be centered before taking it's SVD. Centering is done along whichever dimension of the matrix (\code{A}) is larger, assuming that there are more measurements per subject than there are subjects. This centering is implemented as a low dimensional operation that does not overwrite the original matrix \code{A}.
-#' @param pattern passed to \code{\link{ff}}. When \code{A} is of class \code{ff}, the returned high dimensional singular vectors are also of class \code{ff}. \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.
+#' @param warning_type passed to \code{\link{qrSVD}}, which calculates either \code{svd(tcrossprod(A))} or \code{svd(crossprod(A))}, whichever is of lower dimension.
+#' @param center_A  Whether the matrix \code{A} should be centered before taking it's SVD. Centering is done along whichever dimension of \code{A} is larger. For example, if \code{A} is tall, then setting \code{center_A=TRUE} will return the SVD of \code{A} after centering the rows of \code{A}. This centering is implemented as a low dimensional matrix operation that does not require creating a copy of the original matrix \code{A}.
+#' @param pattern passed to \code{\link{ff}}. When \code{A} has class \code{ff}, the returned high dimensional singular vectors will also have class \code{ff}. \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.
 #'
-#' @return Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSVD} solves \eqn{svd(A)=UDV'}, where \eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. For matrices where one dimension is substantially large than the other, calculation times are considerably faster than the standard \code{svd} function.
+#' #' @details Users might also consider changing the global options \code{ffbatchbytes}, from the \code{ff} package. When a \code{ff} object is entered, the \code{ffbatchbytes} option determines the block size for the block matrix algebra used to calculate the SVD.
+#'
+#' @return Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSVD} solves \eqn{svd(A)=UDV'}, where \eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. When \code{A} is entered as an \code{ff} object, the high dimensional singular vectors of \code{A} will be returned as an \code{ff} object as well. For matrices where one dimension is substantially large than the other, calculation times are considerably faster than the standard \code{svd} function.
 #'
 #' @export
 #'
@@ -189,6 +192,13 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 #' #Note: For a tall, demeaned matrix Y, with columns corresponding 
 #' #to subjects and rows to measurements, 
 #' #the PCs are the high dimensional left singular vectors.
+#' 
+#' #Example with 'ff'
+#' dev.off()
+#' library(ff)
+#' Yff<-as.ff(Y)
+#' Vff<-fastSVD(Yff)$v
+#' matplot(Vff[,1:5],type='l',lty=1) 
 fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, pattern=NULL){ 
 	N<-min(dim(A))
 	p<-max(dim(A))
@@ -240,19 +250,20 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, patter
 
 #' Matrix multiplication with "ff_matrix" or "matrix" inputs
 #'
-#' One function for %*%, crossprod, and tcrossprod, that is compatible with ff_matrices. Multiplication is done without creating new matrices for t(x) or t(y). Note, the crossproduct function can't be applied directly to objects of class \code{ff_matrix}. 
+#' A function for \code{crossprod(x,y)}, for \code{tcrossprod(x,y)}, or for regular matrix multiplication, that is compatible with \code{ff} matrices. Multiplication is done without creating new matrices for the transposes of \code{x} or \code{y}. Note, the crossproduct function can't be applied directly to objects with class \code{ff}. 
 #'
 #' @param x a matrix or ff_matrix
 #' @param y a matrix or ff_matrix. If NULL, this is indirectly set equal to x, although a second copy of the matrix x is not actually stored.
 #' @param xt should the x matrix be transposed before multiplying
-#' @param yt should the y matrix be transposed before multiplying (e.g. xt=TRUE, yt=FALSE leads to x'y).
-#' @param ram.output force output to be a normal matrix, as opposed to an object of class \code{ff_matrix}.
+#' @param yt should the y matrix be transposed before multiplying (e.g. \code{xt=TRUE}, \code{yt=FALSE} leads to \code{crossprod(x,y)}).
+#' @param ram.output force output to be a normal matrix, as opposed to an object with class \code{ff}.
 #' @param override.big.error If the dimension of the final output matrix is especially large, \code{ffmatrixmult} will abort, giving an error. This is meant to avoid the accidental creation of very large matrices. Set override.big.error=TRUE to bypass this error.
-#' @param ... passed to \code{\link{ff}} when creating
+#' @param ... passed to \code{\link{ff}}.
 #' @export
 #' @import ff
-#' @return x'y or xy', depending on value of transpose. If one of the output matrix dimensions is large, the output will be stored as an ff object.
+#' @return A standard matrix, or a matrix with class \code{ff} if one of the input matrices has class \code{ff}.
 #' @examples \dontrun{
+#'  library(ff)
 #' 	#Tall data
 #' 	y_tall<-matrix(rnorm(5000),500,10) #y tall
 #' 	x_tall<-matrix(rnorm(5000),500,10)
@@ -263,11 +274,12 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, patter
 #' 	y_wide_ff<-as.ff(y_wide) #y tall and ff
 #' 	x_wide_ff<-as.ff(x_wide) 
 #'
-#'   #Set options to ensure that block matrix algebra is actually done,
-#'   #and the entire algebra isn't just one in one step.
-#'   options('ffbatchsize'=100)
+#'  #Set options to ensure that block matrix algebra is actually done,
+#'  #and the entire algebra isn't just one in one step.
+#'  #Compare ffmatrixmult against output from standard methods
+#'  options('ffbytesize'=100)
 #'
-#'   	#small final matrices
+#'  #small final matrices
 #' 	#x'x
 #' 	range(  crossprod(x_tall) - ffmatrixmult(x_tall_ff, xt=TRUE)  )
 #' 	range(  tcrossprod(x_wide) - ffmatrixmult(x_wide_ff, yt=TRUE)  )
@@ -289,9 +301,8 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, patter
 #' 	range(  tcrossprod(s_wide, y_tall) - ffmatrixmult( s_wide,y_tall_ff,yt=TRUE)[]  )
 #' 	range( s_wide%*%y_wide - ffmatrixmult(s_wide,y_wide_ff)[])
 #'
-#' class(ffmatrixmult( s_wide,y_tall_ff,yt=TRUE,FF_RETURN=TRUE)  	)
-#'  	#Reset options for more practical use
-#'   options('ffbytesize'=16777216)
+#'  #Reset options for more practical use
+#'  options('ffbytesize'=16777216)
 #'
 #'}
 ffmatrixmult <- function(x,y=NULL,xt=FALSE,yt=FALSE,ram.output=FALSE, override.big.error=FALSE,...) {	
@@ -497,14 +508,14 @@ genBootIndeces<-function(B,n){
 
 #' Calculate bootstrap distribution of \eqn{n}-dimensional PCs
 #'
-#' \code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Some users may want to instead consider using \code{\link{bootSVD}}, which calls \code{bootSVD_LD}, and also calculates descriptions of the high dimensional components.
+#' \code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Most users may want to instead consider using \code{\link{bootSVD}}, which also calculates descriptions of the high dimensional components. Note that \code{\link{bootSVD}} calls \code{bootSVD_LD}.
 #'
-#' @param UD a (\eqn{n} by \eqn{n}) matrix of scores, were rows denote individuals, and columns denote measurements in the PC space.
+#' @param UD (optional) a (\eqn{n} by \eqn{n}) matrix of scores, were rows denote individuals, and columns denote measurements in the PC space.
 #' @param DUt the transpose of \code{UD}. If both \code{UD} and \code{UDt} are entered and \code{t(UD)!=DUt}, the \code{DUt} argument will override the \code{UD} argument.
 #' @param bInds a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, where \code{B} is the number of bootstrap samples, and \code{n} is the sample size. Each row should be an indexing vector that can be used to generate a new bootstrap sample (i.e. \code{sample(n,replace=TRUE)}). The matrix of bootstrap indeces is taken as input, rather than being calculated within \code{bootSVD_LD}, so that this method can be more easily compared against traditional bootstrap SVD methods on the exact same bootstrap samples. The \code{bInds} matrix can be calculated using the helper function \code{\link{genBootIndeces}}).
 #' @param K the number of PCs to be estimated.
 #' @param warning_type passed to \code{\link{qrSVD}}, when taking the SVD of the low dimensional bootstrap score matrices.
-#' @param talk setting this to \code{TRUE} will cause a progress bar to appear.
+#' @param talk if \code{TRUE}, a progress bar will appear.
 #' @param centerSamples whether each bootstrap sample should be centered before calculating the SVD.
 #'
 #' @return For each bootstrap matrix \eqn{(DU')^b}, let \eqn{svd(DU')=:A^b D^b U^b}, where \eqn{A^b} and \eqn{U^b} are (\eqn{n} by \eqn{n}) orthonormal matrices, and \eqn{D^b} is a (\eqn{n} by \eqn{n}) diagonal matrix \eqn{K}. Here we calculate only the first \code{K} columns of \eqn{A^b}, but all \code{n} columns of \eqn{U^b}. The results are stored as a list containing
@@ -565,7 +576,7 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' \code{As2Vs} is a simple function converts the list of principal component (PC) matrices for the bootstrap scores to a list of principal component matrices on the original high dimensional space. Both of these lists, the input and the output of \code{As2Vs}, are indexed by \eqn{b}.
 #' @param AsByB a list of the PCs matrices for each bootstrap sample, indexed by \eqn{b}. Each element of this list should be a (\eqn{n} by \eqn{K}) matrix, where \eqn{K} is the number of PCs of interest, and \eqn{n} is the sample size.
 #' @param V a tall (\eqn{p} by \eqn{n}) matrix containing the PCs of the original sample, where \eqn{n} is sample size, and \eqn{p} is sample dimension.
-#' @param pattern if \code{V} is a class \code{ff} object, the returned value will also be a class \code{ff} object. \code{patern} is passed to \code{\link{ff}} in creation of the output.
+#' @param pattern if \code{V} is a class \code{ff} object, the returned value will also be a class \code{ff} object. \code{pattern} is passed to \code{\link{ff}} in creation of the output.
 #' @param ... passed to \code{\link{mclapply}}.
 #'
 #' @return a \code{B}-length list of (\code{p} by \code{K}) PC matrices on the original sample coordinate space (denoted here as \eqn{V^b}). This is achieved by the matrix multiplication \eqn{V^b=VA^b}. Note that here, \eqn{V^b} denotes the \eqn{b^{th}} bootstrap PC matrix, not \eqn{V} raised to the power \eqn{b}. This notation is the same as the notation used in (Fisher et al., 2014).
@@ -594,17 +605,17 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 	DUMP<-mclapply(1:B, FUN=function(b){
 			VsByB[[b]]<<-ffmatrixmult(V,AsByB[[b]],xt=FALSE,yt=FALSE, pattern=paste0(pattern,b,'_'))
 			if('ff' %in% class(VsByB[[b]])) close(VsByB[[b]])
-		},mc.cores=getOption('bootSVD.mc.cores',1), ...) #default ffmatrixmult uses a random tempfile name to store each matrix (for big matrices).
+		},mc.cores=getOption("mc.cores", 1), ...) #default ffmatrixmult uses a random tempfile name to store each matrix (for big matrices).
 	return(VsByB)
 }
 
-#' Used for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
+#' Used for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}). If the inputted matrices have class \code{ff}, the returned matrices will also have class \code{ff}.
 #'
 #' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{\link{getMomentsAndMomentCI}}.
 #'
-#' @param vectorsByB a \code{B}-length list of (\code{r} by \code{K}) matrices of vector output for each bootstrap sample, where \code{K} is the number of vectors of interest and \code{B} is the number of bootstrap samples. An element of \code{vectorsByB} might refer to the matrix of '\eqn{n}-dimensional' components \eqn{A^b} (i.e. \eqn{r:=n}), to the high dimensional components \eqn{V^b} (i.e. \eqn{r:=p}), or to the matrix of '\eqn{n}-dimensional' scores \eqn{U^b}. In all cases, the input matrices should be indexed by \eqn{b}, where \eqn{b=1,2,...B}, and \eqn{B} denotes the number of bootstrap samples.
-#' @param pattern if elements of \code{vectorsByB} are of class \code{ff} object, then the returned, reordered vectors will also be class \code{ff} objects. \code{pattern} is passed to \code{\link{ff}} when creating these \code{ff} objects.
-#' @return a \code{K}-length list of (\eqn{B} by \eqn{r}) PC matrices. If \code{PCsByK} is the output of \code{reindexVectorsByK}, then \code{PCsByK[[k]][b,]} is the \eqn{k^{th}} fitted PC from the \code{b^{th}} bootstrap sample. This allows for quick estimation of low dimensional moments, or percentiles. Moments can also be directly calculated by the \code{\link{getMomentsAndMomentCI}} function.
+#' @param matricesByB a \code{B}-length list of (\code{r} by \code{K}) matrices from each bootstrap sample.
+#' @param pattern (optional) passed to \code{\link{ff}}.
+#' @return a \code{K}-length list of (\eqn{B} by \eqn{r}) matrices. If elements of \code{matricesByB} have class \code{ff}, then the returned, reordered matrices will also have class \code{ff}.
 #'
 #' @export
 #' @import ff
@@ -622,7 +633,7 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' ########
 #' # to get 'low dimensional PC' moments and lower percentiles
 #' AsByB<-bootSVD_LD_output$As
-#' AsByK<-reindexVectorsByK(AsByB)
+#' AsByK<-reindexMatricesByK(AsByB)
 #'
 #' meanA1<-	apply(AsByK[[1]],2,mean)
 #' seA1<-	apply(AsByK[[1]],2,sd)
@@ -644,7 +655,7 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' #########
 #' #High dimensional percentiles for each PC
 #' VsByB<-As2Vs(As=AsByB,V=V)
-#' VsByK<-reindexVectorsByK(VsByB)
+#' VsByK<-reindexMatricesByK(VsByB)
 #' percentileCI_Vs<-lapply(VsByK,function(mat_k){
 #' 	apply(mat_k,2,function(x) quantile(x,c(.025,.975)))
 #' })
@@ -655,27 +666,42 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #'
 #' # Note: This function can also be used to reorganize the
 #' #   high dimensional PCs, but for 'ff' matrices, this will
-#' #   create a new set of files. 
-reindexVectorsByK<-function(vectorsByB, pattern){
-	ff_mat<- ('ff' %in% class(vectorsByB[[1]]))
+#' #   create a new set of files on disk. 
+reindexMatricesByK<-function(matricesByB, pattern){
+	ff_mat<- ('ff' %in% class(matricesByB[[1]]))
 
-	K<-dim(vectorsByB[[1]])[2]
-	r<-dim(vectorsByB[[1]])[1]
-	B<-length(vectorsByB)
-	vectorsByK<-list() 
+	K<-dim(matricesByB[[1]])[2]
+	r<-dim(matricesByB[[1]])[1]
+	B<-length(matricesByB)
+	matricesByK<-list() 
 
 	#each item in this list has B rows and K cols
 	for(k in 1:K){
-		if(!ff_mat) vectorsByK[[k]] <- matrix(NA,B,r)
-		if( ff_mat) vectorsByK[[k]] <- ff(0,dim=c(B,r), pattern=paste0(pattern,k,'_'))
-		for(b in 1:B) vectorsByK[[k]][b,]<-vectorsByB[[b]][,k]
+		if(!ff_mat) matricesByK[[k]] <- matrix(NA,B,r)
+		if( ff_mat){
+			matricesByK[[k]] <- ff(0,dim=c(B,r), pattern=paste0(pattern,k,'_'))
+			close(matricesByK[[k]])
+		}
+		for(b in 1:B){
+			if(ff_mat) {
+				open(matricesByB[[b]])
+				open(matricesByK[[k]])
+			}
+
+			matricesByK[[k]][b,]<-matricesByB[[b]][,k]
+
+			if(ff_mat) {
+				close(matricesByB[[b]])
+				close(matricesByK[[k]])
+			}
+		}
 	}
-	return(vectorsByK)
+	return(matricesByK)
 }
 
 #' Used to study of the bootstrap distribution of the k^th singular values, by re-indexing the list of \eqn{d^b} vectors to be organized by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
-#' @param scalarsByB a list of vectors, with each vector containing the \code{n} singular values from a different bootstrap sample.
-#' @return a \code{K}-length list of (\eqn{B} by \eqn{n}) matrices, where each matrices' rows refers to the singular values from a different bootstrap sample.
+#' @param vectorsByB a \code{B}-length list, containing vectors with the \code{n} values from each bootstrap sample.
+#' @return a \code{K}-length list of (\eqn{B} by \eqn{n}) matrices, where each matrices' rows refers to the values from a different bootstrap sample.
 #' @export
 #'
 #' @examples
@@ -686,20 +712,20 @@ reindexVectorsByK<-function(vectorsByB, pattern){
 #' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
 #' 
-#' dsByK<-reindexScalarsByK(bootSVD_LD_output$ds)
+#' dsByK<-reindexVectorsByK(bootSVD_LD_output$ds)
 #' 
 #' boxplot(dsByK[[1]],main='Bootstrap distribution of 1st singular value')
-reindexScalarsByK<-function(scalarsByB){
-	n<-length(scalarsByB[[1]])
-	B<-length(scalarsByB)
-	scalarsByK<-list() 
+reindexVectorsByK<-function(vectorsByB){
+	n<-length(vectorsByB[[1]])
+	B<-length(vectorsByB)
+	vectorsByK<-list() 
 	#each item in this list has b on the rows, k on the cols
 	for(k in 1:n){
 		dk<- rep(NA,B) #b on the rows
-		for(b in 1:B) dk[b]<-scalarsByB[[b]][k]
-		scalarsByK[[k]]<-dk
+		for(b in 1:B) dk[b]<-vectorsByB[[b]][k]
+		vectorsByK[[k]]<-dk
 	}
-	return(scalarsByK)
+	return(vectorsByK)
 }
 
 
@@ -707,7 +733,7 @@ reindexScalarsByK<-function(scalarsByB){
 #'
 #' Let \eqn{K} be the number of PCs of interest, let \eqn{B} be the number of bootstrap samples, and let \eqn{p} be the number of measurements per subject, also known as the dimension of the sample. In general, we use \eqn{k} to refer to the principal component (PC) index, where \eqn{k=1,2,...K}, and use \eqn{b} to refer to the bootstrap index, where \eqn{b=1,2,...B}.
 #' @param AsByK a list of the bootstrap PC matrices. This list should be indexed by \eqn{k}, with the \eqn{k^{th}} element of the lsit containing a \eqn{b} by \eqn{p} matrix of results for the \eqn{k^{th}} PC, across bootstrap samples.
-#' @param V a (\eqn{p} by \eqn{n}) containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix containing the PCs of the original sample.
+#' @param V a (\eqn{p} by \eqn{n}) matrix containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix of PCs from the original sample.
 #' @param K the number of leading PCs for which moments and confidence intervals should be obtained.
 #' @param talk setting to \code{TRUE} will cause the function to print its progress in calculating the bootstrap variance for each PC.
 #' @return a list containing
@@ -729,7 +755,7 @@ reindexScalarsByK<-function(scalarsByB){
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
 #' 
 #' AsByB<-bootSVD_LD_output$As
-#' AsByK<-reindexVectorsByK(AsByB)
+#' AsByK<-reindexMatricesByK(AsByB)
 #' moments<-getMomentsAndMomentCI(AsByK,V,talk=TRUE)
 #' plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')
 #' matlines(moments$momentCI[[1]],col='blue',lty=1)
@@ -767,40 +793,41 @@ getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),talk=FALSE){
 #'
 #' Applies fast bootstrap PCA, using the method from (Fisher et al., 2014). Dimension of the sample is denoted by \eqn{p}, and sample size is denoted by \eqn{n}, with \eqn{p>n}.
 #'
-#' @param Y initial data sample. Can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}), must have dimension greater than sample size (\eqn{p>n}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} are not, \code{bootSVD} will also compute the SVD of \code{Y}.
+#' @param Y initial data sample, which can be either a matrix of a \code{\link{ff}} matrix. \code{Y} can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} (see definitions below) are not, then \code{bootSVD} will also compute the SVD of \code{Y}. In this case where the SVD is computed, \code{bootSVD} will assume that the larger dimension of \code{Y} is \eqn{p}, and the smaller dimension of code {Y} is \eqn{n} (i.e. \code{bootSVD} assumes that (\eqn{p>n}). This assumption can be overriden by manually entering \code{V}, \code{U} and \code{d}. For cases where the entire data matrix can be easily stored in memory (e.g. \eqn{p<50000}), it is generally appropriate to enter \code{Y} as a standard matrix. When \code{Y} is large enough that matrix algebra on \code{Y} is too demanding for memory though, \code{Y} should be entered as a \code{\link{ff}} object, where the actual data is stored on disk. For \code{Y} objects with class \code{ff}, block matrix algebra will be used to calculate the PCs and bootstrap PCs.
 #' @param K number of PCs to calculate the bootstrap distribution for.
-#' @param V (optional) the (\eqn{p} by \eqn{K}) full set of \eqn{p}-dimensional PCs for the sample data matrix. If \code{Y} is wide, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}). In general it is assumed that \eqn{p>n}, however, this can be overridden by setting \code{V} and \code{U} appropriately.
-#' @param U (optional) the (\eqn{n} by \eqn{K}) full set of \eqn{n}-dimensional singular vectors of \code{Y}. If \code{Y} is wide, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}).
-#' @param d (optional) vector of the singular values of \code{Y}. For example, if \code{Y} is tall, then we have \eqn{Y=VDU'} with \code{D=diag(d)}.
+#' @param V (optional) the (\eqn{p} by \eqn{n}) full matrix of \eqn{p}-dimensional PCs for the sample data matrix. If \code{Y} is wide, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}). In general it is assumed that \eqn{p>n}, however, this can be overridden by setting \code{V} and \code{U} appropriately.
+#' @param U (optional) the (\eqn{n} by \eqn{n}) full set of \eqn{n}-dimensional singular vectors of \code{Y}. If \code{Y} is wide, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}).
+#' @param d (optional) \eqn{n}-length vector of the singular values of \code{Y}. For example, if \code{Y} is tall, then we have \eqn{Y=VDU'} with \code{D=diag(d)}.
 #' @param B number of bootstrap samples to compute.
 #' @param output a vector telling which descriptions of the bootstrap distribution should be calculated. Can include any of the following: 'initial_SVD','HD_moments', 'full_HD_PC_dist', 'full_LD_PC_dist', 'd_dist', and 'U_dist'. If \code{output} is set to 'all', then all bootstrap PCA results will be reported. See below for explanations of these outputs.
 #' @param talk If TRUE, the function will print progress during calculation procedure.
-#' @param bInds a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, where \code{B} is the number of bootstrap samples, and \code{n} is the sample size. The purpose of setting a specific bootstrap sampling index is to allow the results to be more easily compared against standard bootstrap PCA calculations. If entered, the \code{bInds} argument will override the \code{B} argument.
+#' @param bInds a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, where \code{B} is the number of bootstrap samples, and \code{n} is the sample size. The purpose of setting a specific bootstrap sampling index is to allow the results to be more precisely compared against standard bootstrap PCA calculations. If entered, the \code{bInds} argument will override the \code{B} argument.
 #' @param percentiles a vector containing percentiles to be used to calculate element-wise percentile confidence intervals for the PCs (both the \eqn{p}-dimensional components and the \eqn{n}-dimensional components). For example, \code{percentiles=c(.025,.975)} will result in \eqn{95} percent CIs.
 #' @param centerSamples whether each bootstrap sample should be centered before calculating the SVD.
-#' @param pattern_V #' if \code{Y} or \code{V} is a class \code{ff} object, then the returned PCs will also be class \code{ff} objects. \code{patern} is passed to \code{\link{ff}} in creation of the \code{initial_SVD} output.
-#' @param pattern_Vb #' if \code{Y} or \code{V} is a class \code{ff} object, then the returned PCs will also be class \code{ff} objects. \code{patern} is passed to \code{\link{ff}} in creation of the \code{full_HD_PC_dist} output.
+#' @param pattern_V if \code{Y} is a class \code{ff} object, then the returned PCs of \code{Y} will also be a class \code{ff} object. \code{patern} is passed to \code{\link{ff}} in creation of the \code{initial_SVD} output.
+#' @param pattern_Vb if \code{Y} or \code{V} is a class \code{ff} object, then the returned bootstrap PCs will also be class \code{ff} objects. \code{patern} is passed to \code{\link{ff}} in creation of the \code{full_HD_PC_dist} output.
+#'
+#' @details Users might also consider changing the global options \code{ffbatchbytes}, from the \code{ff} package, and \code{mc.cores}, from the \code{parallel} package. When \code{ff} objects are entered as arguments for \code{bootSVD}, the \code{ffbatchbytes} option determines the block size for the block matrix algebra used to calculate the PCs and bootstrap PCs. The \code{mc.cores} option (set to 1 by default) determines the level of parallelization to use when calculating the high dimensional distribution of the bootstrap PCs.
 #'
 #' @return Output is a list which can include any of the following elements, depending on what is specified in the \code{output} argument:
 #' \describe{
 #' 	\item{initial_SVD}{The singular value decomposition of the centered, original data matrix. \code{initial_SVD} is a list containing \code{V}, the matrix of \eqn{p}-dimensional principal components, \code{d}, the vector of singular values of \code{Y}, and \code{U}, the matrix of \eqn{n}-dimensional singular vectors of \code{Y}.}
 #'	\item{HD_moments}{A list containing the bootstrap expected value (\code{EPCs}), element-wise bootstrap variance (\code{varPCs}), and element-wise bootstrap standard deviation (\code{sdPCs}) for each of the \eqn{p}-dimensional PCs. Each of these three elements of \code{HD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{HD_moments} also contains \code{momentCI}, a \eqn{K}-length list of (\eqn{p} by 2) matrices containing element-wise moment based confidence intervals for the PCs.}
-#'	\item{full_HD_PC_dist}{A \eqn{B}-length list of matrices (or 'ff' matrices), with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of high dimensional PCs for the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}. However, take special care when reindexing PCs stored as code{ff} objects, as this may double the number of files being stored.}
+#'	\item{full_HD_PC_dist}{A \eqn{B}-length list of matrices (or \code{ff} matrices), with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of high dimensional PCs for the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}. However, take special care when reindexing PCs stored as \code{ff} objects, as this may double the number of files being stored.}
 #'	\item{HD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{2}). The \eqn{k^{th}} matrix in \code{HD_percentiles} contains element-wise percentile intervals for the \eqn{k^{th}} \eqn{p}-dimensional PC.}
-#' \item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
-#' \item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see \code{\link{reindexScalarsByK}}.}
-#' \item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
+#' \item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}.}
+#' \item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
+#' \item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}.}
 #' }
 #'
 #'
 #'
 #' In addition, the following results are always included in the output, regardless of what is specified in the \code{output} argument:
 # \describe{
-#'	\item{LD_moments}{A list that is comparable to \code{HD_moments}, but instead describes the variability of the \eqn{n}-dimensional principal components of the resampled score matrices. \code{LD_moments} contains the bootstrap expected value (\code{EPCs}), bootstrap variance (\code{varPCs}), and bootstrap standard deviation (\code{sdPCs}) for each of the \eqn{n}-dimensional PCs. Each of these three elements of \code{LD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{LD_moments} also contains \code{momentCI}, a list of \eqn{K} (\eqn{n} by 2) matrices containing element-wise moment based confidence intervals for the PCs.}
+#'	\item{LD_moments}{A list that is comparable to \code{HD_moments}, but instead describes the variability of the \eqn{n}-dimensional principal components of the resampled score matrices. \code{LD_moments} contains the bootstrap expected value (\code{EPCs}), element-wise bootstrap variances (\code{varPCs}), and element-wise bootstrap standard deviations (\code{sdPCs}) for each of the \eqn{n}-dimensional PCs. Each of these three elements of \code{LD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{LD_moments} also contains \code{momentCI}, a list of \eqn{K} (\eqn{n} by 2) matrices containing element-wise, moment-based confidence intervals for the PCs.}
 #'	\item{LD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{n} by \eqn{2}). The \eqn{k^{th}} matrix in \code{LD_percentiles} contains element-wise percentile intervals for the \eqn{k^{th}} \eqn{n}-dimensional PC.
 #' }
 #'
-#' If the dimension of the sample is especially large (e.g. \eqn{p>10000}), operations involving the entire sample data matrix may require too much memory, creating computational bottlenecks. In these cases, the sample data can be partitioned into several smaller data files, and simple block matrix algebra can be used to compute the bootstrap distribution of the principal components. This matrix algebra is explained in more detail in section 1 of the supplemental materials of (Fisher et al., 2014)
 #'
 #' @references
 #' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
@@ -825,7 +852,7 @@ getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),talk=FALSE){
 #' #looking at HD variability
 #'
 #' #plot several draws from bootstrap distribution
-#' VsByK<-reindexVectorsByK(b$full_HD_PC_dist)
+#' VsByK<-reindexMatricesByK(b$full_HD_PC_dist)
 #' matplot(t(VsByK[[k]][1:20,]),type='l',lty=1,
 #' 		main=paste0('20 Draws from bootstrap\ndistribution of HD PC ',k))
 #'
@@ -842,7 +869,7 @@ getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),talk=FALSE){
 #' # looking at LD variability
 #'
 #' # plot several draws from bootstrap distribution
-#' AsByK<-reindexVectorsByK(b$full_LD_PC_dist)
+#' AsByK<-reindexMatricesByK(b$full_LD_PC_dist)
 #' matplot(t(AsByK[[k]][1:50,]),type='l',lty=1,
 #' 		main=paste0('50 Draws from bootstrap\ndistribution of LD PC ',k),
 #'		xlim=c(1,10),xlab='PC index (truncated)')
@@ -858,17 +885,55 @@ getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),talk=FALSE){
 #' #Note: variability is mostly due to rotations with the third and fourth PC.
 #' 
 #' # Bootstrap eigenvalue distribution
-#' dsByK<-reindexScalarsByK(b$d_dist)
+#' dsByK<-reindexVectorsByK(b$d_dist)
 #' boxplot(dsByK[[k]]^2,main=paste0('Covariance Matrix Eigenvalue ',k),
 #' 	ylab='Bootstrap Distribution',
 #' 	ylim=range(c(dsByK[[k]]^2,b$initial_SVD$d[k]^2)))
 #' points(b$initial_SVD$d[k]^2,pch=18,col='red')
 #' legend('bottomright','Sample Value',pch=18,col='red')
+#'
+#'
+#' ##################
+#' #Example with ff input
+#' library(ff)
+#' Yff<-as.ff(Y, pattern='Y_')
+#' # If desired, change options in 'ff' package to
+#' # adjust the size of batches held in RAM.
+#' # options('ffbatchbytes'=100000)
+#' ff_dir<-tempdir()
+#' pattern_V <- paste0(ff_dir,'/V_')
+#' pattern_Vb <- paste0(ff_dir,'/Vb_')
+#' bff <- bootSVD(Yff,B=200,K=2,output='all',pattern_V='V_', pattern_V,pattern_Vb=pattern_Vb)
+#' 
+#' # Note that elements of full_HD_PC_dist and initial_SVD
+#' # have class 'ff'
+#' lapply(bff,function(x) class(x[[1]]))
+#' #Show some results of bootstrap draws
+#' plot(bff$full_HD_PC_dist[[1]][,k],type='l')
+#' #Reindexing by K will create a new set of ff files.
+#' VsByKff<-reindexMatricesByK(bff$full_HD_PC_dist,
+#'   pattern=paste0(ff_dir,'/Vk_'))
+#' physical(bff$full_HD_PC_dist[[1]])$filename
+#' physical(VsByKff[[1]])$filename
+#' matplot(t(VsByKff[[k]][1:10,]),type='l',lty=1,
+#'   main=paste0('Bootstrap Distribution of PC',k))
+#' 
+#' 
+#' # Saving and moving results:
+#' saveRDS(bff,file=paste0(ff_dir,'/bff.rds'))
+#' physical(bff$initial_SVD$V)$filename
+#' # If the 'ff' files on disk are moved, 
+#' # this attribute can be changed:
+#' new_ff_dir<-tempdir() 
+#' physical(bff$initial_SVD$V)$filename <- new_ff_dir
+#' matplot(bff$initial_SVD$V[,1:4],type='l',lty=1)
+#' 
+#' 
 bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),centerSamples=TRUE, pattern_V='V_', pattern_Vb='Vb_'){
 
 	#Input checks and warnings
 	if( (object.size(Y) > getOption('ffbatchbytes',16777216)) & (!'ff' %in% c(class(Y),class(V))) )
-		stop(paste0("Very large sample data matrices, here ",object.size(Y)," bytes, can lead to very large memory requirements. For especially high dimensional data, either input Y and/or V as 'ff' objects, or increase the 'ffbatchbytes' option. This option is currently set to ",getOption("ffbatchbytes", 16777216)," bytes, which is less than the size of Y (or V). Inputting an object of class 'ff' will implement a block matrix algebra procedure."))
+		stop(paste0("Very large sample data matrices, here ",object.size(Y)," bytes, can lead to very large memory requirements. For especially high dimensional data, either input Y and/or V as 'ff' objects, or increase the 'ffbatchbytes' option. This option is currently set to ",getOption("ffbatchbytes", 16777216)," bytes, which is less than the size of Y (or V). Inputting an object with class 'ff' will implement a block matrix algebra procedure."))
 	svd_args<- FALSE
 	if(!is.null(V) & !is.null(U) & !is.null(d)) svd_args<- TRUE
 	if(svd_args){
@@ -905,7 +970,7 @@ bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TR
 	if(talk) cat('...Calculating n-dimensional bootstrap SVDs...')
 	bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=K,talk=talk,centerSamples=centerSamples)
 	AsByB<-bootSVD_LD_output$As
-	AsByK<-reindexVectorsByK(vectorsByB=AsByB)
+	AsByK<-reindexMatricesByK(matricesByB=AsByB)
 
 	# Build output
 	out_contents<-list()
@@ -956,14 +1021,13 @@ bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TR
 
 		#If full_HD_PC_dist was needed to create percentiles
 		#but isn't requested in the output, then
-		#delete it and run gc() if we have ff objects.
+		#delete it and run gc() later on, if we have ff objects.
 		if( !'full_HD_PC_dist' %in% output & ! 'all' %in% output){
 			out_contents[['full_HD_PC_dist']]<-NULL
 			index2remove<-which(names(out_contents)=='full_HD_PC_dist')
 			out_contents<-out_contents[-index2remove]
 		}
 	}
-	if(ff_data) gc()
 	####
 
 	if('full_LD_PC_dist' %in% output | 'all' %in% output){
@@ -975,6 +1039,13 @@ bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TR
 	if('U_dist' %in% output | 'all' %in% output){
 		out_contents[['U_dist']]<-bootSVD_LD_output$Us
 	}
+
+	#Clean up:
+	if((!'initial_SVD' %in% output) &(!'all' %in% output)){
+		rm(V)
+	}
+	if(ff_data) gc()
+
 
 	return(out_contents)
 }

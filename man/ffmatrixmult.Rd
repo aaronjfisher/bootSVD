@@ -13,22 +13,23 @@ ffmatrixmult(x, y = NULL, xt = FALSE, yt = FALSE, ram.output = FALSE,
 
 \item{xt}{should the x matrix be transposed before multiplying}
 
-\item{yt}{should the y matrix be transposed before multiplying (e.g. xt=TRUE, yt=FALSE leads to x'y).}
+\item{yt}{should the y matrix be transposed before multiplying (e.g. \code{xt=TRUE}, \code{yt=FALSE} leads to \code{crossprod(x,y)}).}
 
-\item{ram.output}{force output to be a normal matrix, as opposed to an object of class \code{ff_matrix}.}
+\item{ram.output}{force output to be a normal matrix, as opposed to an object with class \code{ff}.}
 
 \item{override.big.error}{If the dimension of the final output matrix is especially large, \code{ffmatrixmult} will abort, giving an error. This is meant to avoid the accidental creation of very large matrices. Set override.big.error=TRUE to bypass this error.}
 
-\item{...}{passed to \code{\link{ff}} when creating}
+\item{...}{passed to \code{\link{ff}}.}
 }
 \value{
-x'y or xy', depending on value of transpose. If one of the output matrix dimensions is large, the output will be stored as an ff object.
+A standard matrix, or a matrix with class \code{ff} if one of the input matrices has class \code{ff}.
 }
 \description{
-One function for %*%, crossprod, and tcrossprod, that is compatible with ff_matrices. Multiplication is done without creating new matrices for t(x) or t(y). Note, the crossproduct function can't be applied directly to objects of class \code{ff_matrix}.
+A function for \code{crossprod(x,y)}, for \code{tcrossprod(x,y)}, or for regular matrix multiplication, that is compatible with \code{ff} matrices. Multiplication is done without creating new matrices for the transposes of \code{x} or \code{y}. Note, the crossproduct function can't be applied directly to objects with class \code{ff}.
 }
 \examples{
 \dontrun{
+ library(ff)
 	#Tall data
 	y_tall<-matrix(rnorm(5000),500,10) #y tall
 	x_tall<-matrix(rnorm(5000),500,10)
@@ -39,11 +40,12 @@ One function for %*%, crossprod, and tcrossprod, that is compatible with ff_matr
 	y_wide_ff<-as.ff(y_wide) #y tall and ff
 	x_wide_ff<-as.ff(x_wide)
 
-  #Set options to ensure that block matrix algebra is actually done,
-  #and the entire algebra isn't just one in one step.
-  options('ffbatchsize'=100)
+ #Set options to ensure that block matrix algebra is actually done,
+ #and the entire algebra isn't just one in one step.
+ #Compare ffmatrixmult against output from standard methods
+ options('ffbytesize'=100)
 
-  	#small final matrices
+ #small final matrices
 	#x'x
 	range(  crossprod(x_tall) - ffmatrixmult(x_tall_ff, xt=TRUE)  )
 	range(  tcrossprod(x_wide) - ffmatrixmult(x_wide_ff, yt=TRUE)  )
@@ -65,9 +67,8 @@ One function for %*%, crossprod, and tcrossprod, that is compatible with ff_matr
 	range(  tcrossprod(s_wide, y_tall) - ffmatrixmult( s_wide,y_tall_ff,yt=TRUE)[]  )
 	range( s_wide\%*\%y_wide - ffmatrixmult(s_wide,y_wide_ff)[])
 
-class(ffmatrixmult( s_wide,y_tall_ff,yt=TRUE,FF_RETURN=TRUE)  	)
- 	#Reset options for more practical use
-  options('ffbytesize'=16777216)
+ #Reset options for more practical use
+ options('ffbytesize'=16777216)
 
 }
 }
