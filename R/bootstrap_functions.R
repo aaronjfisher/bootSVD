@@ -539,17 +539,17 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 		#generally we won't include the subscript b here, in our variable names
 		DUtP<-DUt[,bInds[b,]] 
 		if(centerSamples) DUtP <- t(scale(t(DUtP),center=TRUE,scale=FALSE))
-		svdASR<-qrSVD(DUtP, warning_type=warning_type)
+		svdDUtP<-qrSVD(DUtP, warning_type=warning_type)
 
 		#store d_b, switch sign and then store A_b and U_b
-		dbs[[b]]<-svdASR$d
-		signSwitcher <- sign(diag(svdASR$u))
+		dbs[[b]]<-svdDUtP$d
+		signSwitcher <- sign(diag(svdDUtP$u))
 		signSwitcher[signSwitcher==0]<-1 #sign() can possibly give us a zero, so we use as.numeric(logic)
-		Abs[[b]]<-
-		Ubs[[b]]<-matrix(NA,nrow=n,ncol=K) 
+		Abs[[b]] <- matrix(NA,nrow=min(dim(DUt)),ncol=K) 
+		Ubs[[b]] <- matrix(NA,nrow=n,ncol=K) 
 		for(i in 1:K){
-			Abs[[b]][,i]<-signSwitcher[i]*svdASR$u[,i]
-			Ubs[[b]][,i]<-signSwitcher[i]*svdASR$v[,i]
+			Abs[[b]][,i]<-signSwitcher[i]*svdDUtP$u[,i]
+			Ubs[[b]][,i]<-signSwitcher[i]*svdDUtP$v[,i]
 		}
 		if(talk) setTxtProgressBar(pb,b)
 	}
@@ -563,10 +563,11 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #'
 #' Let \eqn{B} be the number of bootstrap samples, indexed by \eqn{b=1,2,...B}.
 #' \code{As2Vs} is a simple function converts the list of principal component (PC) matrices for the bootstrap scores to a list of principal component matrices on the original high dimensional space. Both of these lists, the input and the output of \code{As2Vs}, are indexed by \eqn{b}.
-#' @param As a list of the PCs matrices for each bootstrap sample, indexed by \eqn{b}. Each element of this list should be a (\eqn{n} by \eqn{K}) matrix, where \eqn{K} is the number of PCs of interest, and \eqn{n} is the sample size.
+#' @param AsByB a list of the PCs matrices for each bootstrap sample, indexed by \eqn{b}. Each element of this list should be a (\eqn{n} by \eqn{K}) matrix, where \eqn{K} is the number of PCs of interest, and \eqn{n} is the sample size.
 #' @param V a tall (\eqn{p} by \eqn{n}) matrix containing the PCs of the original sample, where \eqn{n} is sample size, and \eqn{p} is sample dimension.
-#' @param mc.cores passed to \code{\link[parallel]{mclapply}}, for parallelizing the computation procedure.
-#' @param ... (optional) passed to \code{\link[parallel]{mclapply}}.
+#' @param pattern if \code{V} is a class \code{ff} object, the returned value will also be a class \code{ff} object. \code{patern} is passed to \code{\link{ff}} in creation of the output.
+#' @param ... passed to \code{\link{mclapply}}.
+#'
 #' @return a \code{B}-length list of (\code{p} by \code{K}) PC matrices on the original sample coordinate space (denoted here as \eqn{V^b}). This is achieved by the matrix multiplication \eqn{V^b=VA^b}. Note that here, \eqn{V^b} denotes the \eqn{b^{th}} bootstrap PC matrix, not \eqn{V} raised to the power \eqn{b}. This notation is the same as the notation used in (Fisher et al., 2014).
 #' @export
 #'
@@ -586,7 +587,7 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' Vs<-As2Vs(As=bootSVD_LD_output$As,V=svdY$v)
 #' # Yields the high dimensional bootstrap PCs (left singular 
 #' # vectors of the bootstrap sample Y), 
-#' # indexed by k = 1,2...K, where K is the number of PCs of interest.
+#' # indexed by b = 1,2...B, where B is the number of bootstrap samples
 As2Vs<-function(AsByB, V, pattern=NULL, ...){
 	B<-length(AsByB)
 	VsByB<-list()
@@ -621,7 +622,7 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' ########
 #' # to get 'low dimensional PC' moments and lower percentiles
 #' AsByB<-bootSVD_LD_output$As
-#' AsByK<-reindexPCsByK(AsByB)
+#' AsByK<-reindexVectorsByK(AsByB)
 #'
 #' meanA1<-	apply(AsByK[[1]],2,mean)
 #' seA1<-	apply(AsByK[[1]],2,sd)
@@ -631,8 +632,8 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' #See example below, for high dimensional bootstrap PCs.
 #'
 #' #Alternatively, moments can be calculated with
-#' seA1_v2<- getMomentsAndMomentCI(As=AsByB,
-#' 		V=diag(dim(AsByB[[1]])[1]))$sdPCs[[1]]
+#' seA1_v2<- getMomentsAndMomentCI(As=AsByK,
+#' 		V=diag(dim(AsByK[[1]])[2]))$sdPCs[[1]]
 #' all(seA1_v2==seA1)
 #'
 #' #Additional examples of exploring the low dimensional bootstrap 
@@ -643,7 +644,7 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' #########
 #' #High dimensional percentiles for each PC
 #' VsByB<-As2Vs(As=AsByB,V=V)
-#' VsByK<-reindexPCsByK(VsByB)
+#' VsByK<-reindexVectorsByK(VsByB)
 #' percentileCI_Vs<-lapply(VsByK,function(mat_k){
 #' 	apply(mat_k,2,function(x) quantile(x,c(.025,.975)))
 #' })
@@ -652,22 +653,28 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' lines(V[,k])
 #' ########
 #'
-reindexPCsByK<-function(PCsByB){#input a list of PC[[b]][j,k] #j=1...r, where r = dimension; k=1,...K=PC index
-	K<-dim(PCsByB[[1]])[2]
-	r<-dim(PCsByB[[1]])[1]
-	B<-length(PCsByB)
-	PCsByK<-list() 
-	#each item in this list has b on the rows, k on the cols
+#' # Note: This function can also be used to reorganize the
+#' #   high dimensional PCs, but for 'ff' matrices, this will
+#' #   create a new set of files. 
+reindexVectorsByK<-function(vectorsByB, pattern){
+	ff_mat<- ('ff' %in% class(vectorsByB[[1]]))
+
+	K<-dim(vectorsByB[[1]])[2]
+	r<-dim(vectorsByB[[1]])[1]
+	B<-length(vectorsByB)
+	vectorsByK<-list() 
+
+	#each item in this list has B rows and K cols
 	for(k in 1:K){
-		AkMat<- matrix(NA,B,r) #b on the rows
-		for(b in 1:B) AkMat[b,]<-PCsByB[[b]][,k]
-		PCsByK[[k]]<-AkMat
+		if(!ff_mat) vectorsByK[[k]] <- matrix(NA,B,r)
+		if( ff_mat) vectorsByK[[k]] <- ff(0,dim=c(B,r), pattern=paste0(pattern,k,'_'))
+		for(b in 1:B) vectorsByK[[k]][b,]<-vectorsByB[[b]][,k]
 	}
-	return(PCsByK)
+	return(vectorsByK)
 }
 
-#' Allows for study of the bootstrap distribution of the k^th singular values, by re-indexing the list of \eqn{d^b} vectors to be organized by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
-#' @param dsByB a list of vectors, with each vector containing the \code{n} singular values from a different bootstrap sample.
+#' Used to study of the bootstrap distribution of the k^th singular values, by re-indexing the list of \eqn{d^b} vectors to be organized by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
+#' @param scalarsByB a list of vectors, with each vector containing the \code{n} singular values from a different bootstrap sample.
 #' @return a \code{K}-length list of (\eqn{B} by \eqn{n}) matrices, where each matrices' rows refers to the singular values from a different bootstrap sample.
 #' @export
 #'
@@ -679,28 +686,28 @@ reindexPCsByK<-function(PCsByB){#input a list of PC[[b]][j,k] #j=1...r, where r 
 #' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
 #' 
-#' dsByK<-reindexDsByK(bootSVD_LD_output$ds)
+#' dsByK<-reindexScalarsByK(bootSVD_LD_output$ds)
 #' 
 #' boxplot(dsByK[[1]],main='Bootstrap distribution of 1st singular value')
-reindexDsByK<-function(dsByB){
-	n<-length(dsByB[[1]])
-	B<-length(dsByB)
-	dsByK<-list() 
+reindexScalarsByK<-function(scalarsByB){
+	n<-length(scalarsByB[[1]])
+	B<-length(scalarsByB)
+	scalarsByK<-list() 
 	#each item in this list has b on the rows, k on the cols
 	for(k in 1:n){
 		dk<- rep(NA,B) #b on the rows
-		for(b in 1:B) dk[b]<-dsByB[[b]][k]
-		dsByK[[k]]<-dk
+		for(b in 1:B) dk[b]<-scalarsByB[[b]][k]
+		scalarsByK[[k]]<-dk
 	}
-	return(dsByK)
+	return(scalarsByK)
 }
 
 
 #' Calculate bootstrap moments and moment-based confidence intervals for the PCs.
 #'
 #' Let \eqn{K} be the number of PCs of interest, let \eqn{B} be the number of bootstrap samples, and let \eqn{p} be the number of measurements per subject, also known as the dimension of the sample. In general, we use \eqn{k} to refer to the principal component (PC) index, where \eqn{k=1,2,...K}, and use \eqn{b} to refer to the bootstrap index, where \eqn{b=1,2,...B}.
-#' @param AsByB a list of the bootstrap PC matrices for each bootstrap sample. This list should be indexed by \eqn{b}, with the \eqn{b^{th}} element containing the results from the \eqn{b^{th}} bootstrap sample.
-#' @param V a (\eqn{p} by \eqn{n}) containing the coordinate vectors for the matrices within the \code{AsByB} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByB} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix containing the PCs of the original sample.
+#' @param AsByK a list of the bootstrap PC matrices. This list should be indexed by \eqn{k}, with the \eqn{k^{th}} element of the lsit containing a \eqn{b} by \eqn{p} matrix of results for the \eqn{k^{th}} PC, across bootstrap samples.
+#' @param V a (\eqn{p} by \eqn{n}) containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix containing the PCs of the original sample.
 #' @param K the number of leading PCs for which moments and confidence intervals should be obtained.
 #' @param talk setting to \code{TRUE} will cause the function to print its progress in calculating the bootstrap variance for each PC.
 #' @return a list containing
@@ -709,6 +716,7 @@ reindexDsByK<-function(dsByB){
 #'	\item{sdVs}{a list containing element-wise bootstrap standard errors for each of the \code{K} fitted PCs, indexed by \code{k}.}
 #'	\item{momentCI}{a list of (\eqn{p} by \eqn{2}) matrices, indexed by \code{k}, where \code{momentCI[[k]][j,]} is the pointwise moment-based CI for the \eqn{j^{th}} element of the \eqn{k^{th}} PC.}
 #' @export
+#' @import ff
 #' @examples
 #'
 #' #use small n, small B for a quick illustration
@@ -721,31 +729,34 @@ reindexDsByK<-function(dsByB){
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
 #' 
 #' AsByB<-bootSVD_LD_output$As
-#' moments<-getMomentsAndMomentCI(AsByB,V,talk=TRUE)
+#' AsByK<-reindexVectorsByK(AsByB)
+#' moments<-getMomentsAndMomentCI(AsByK,V,talk=TRUE)
 #' plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')
 #' matlines(moments$momentCI[[1]],col='blue',lty=1)
 #'
 #' #Can also use this function to get moments for low dimensional
 #' #vectors A^b[,k], by setting V to the identity matrix.
-#' moments_A<- getMomentsAndMomentCI(As=AsByB,V=diag(nrow(AsByB[[1]])))
-getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
-	AsByK<-reindexPCsByK(AsByB)
+#' moments_A<- getMomentsAndMomentCI(As=AsByK,V=diag(ncol(AsByK[[1]])))
+getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),talk=FALSE){
 	EAs<-lapply(AsByK, colMeans) #EAs is indexed by k
-	EVs<-lapply(EAs,function(EA) V %*% matrix(EA,ncol=1)) #V is pxn, EA_k is nx1, so this is nxpxK complexity across the whole lapply.
+	EVs<-lapply(EAs,function(EA) as.matrix(ffmatrixmult(V, matrix(EA,ncol=1),xt=FALSE,yt=FALSE,ram.output=TRUE)) )#V is pxn, EA_k is nx1, so this is nxpxK complexity across the whole lapply.##!!!
 	varAs<-lapply(AsByK,var) #indexed by k
 	varVs<-list()
 	#varTime<-system.time({
 	for(k in 1:length(AsByK)){
 		# Calculate the diagonals without doing loops using:
 		# diag(VA')=rowSums(V*A); or diag(V'A)=colSums(V*A)
-		varVs[[k]]<-rowSums(  (V%*%varAs[[k]]) * V )
+		varVs[[k]]<-ffapply({
+			rowSums((V[i1:i2,]%*%varAs[[k]])*V[i1:i2,])
+		},X=V, MARGIN=1, RETURN=TRUE, FF_RETURN=FALSE)
+		
 		if(talk) cat(paste0('...Got variance for PC #',k,'...\n'))
 	}
 	#})#end system.time
 	sdVs<-lapply(varVs,sqrt)
 
 	momentCI<-lapply(1:K,function(k){
-		cbind(EVs[[k]],EVs[[k]])+cbind(-2*sdVs[[k]],+2*sdVs[[k]])
+		return(cbind(EVs[[k]],EVs[[k]])+cbind(-1.96*sdVs[[k]],+1.96*sdVs[[k]]))
 	})
 
 	return(list(EPCs=EVs,varPCs=varVs,sdPCs=sdVs,momentCI=momentCI))#varTime=varTime
@@ -754,30 +765,31 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 
 #' Calculates bootstrap distribution of PCA (i.e. SVD) results
 #'
-#' Applies fast bootstrap PCA, using the method from (Fisher et al., 2014). Dimension of the sample is denoted by \eqn{p}, and sample size is denoted by \eqn{n}.
+#' Applies fast bootstrap PCA, using the method from (Fisher et al., 2014). Dimension of the sample is denoted by \eqn{p}, and sample size is denoted by \eqn{n}, with \eqn{p>n}.
 #'
-#' @param Y initial data sample. Can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} are not, \code{bootSVD} will also compute the SVD of \code{Y}.
+#' @param Y initial data sample. Can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}), must have dimension greater than sample size (\eqn{p>n}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} are not, \code{bootSVD} will also compute the SVD of \code{Y}.
 #' @param K number of PCs to calculate the bootstrap distribution for.
-#' @param V (optional) full set of \eqn{p}-dimensional PCs for the sample data matrix. If \code{Y} is wide, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}).
-#' @param U (optional) full set of \eqn{n}-dimensional singular vectors of \code{Y}. If \code{Y} is wide, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}).
+#' @param V (optional) the (\eqn{p} by \eqn{K}) full set of \eqn{p}-dimensional PCs for the sample data matrix. If \code{Y} is wide, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}). In general it is assumed that \eqn{p>n}, however, this can be overridden by setting \code{V} and \code{U} appropriately.
+#' @param U (optional) the (\eqn{n} by \eqn{K}) full set of \eqn{n}-dimensional singular vectors of \code{Y}. If \code{Y} is wide, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}).
 #' @param d (optional) vector of the singular values of \code{Y}. For example, if \code{Y} is tall, then we have \eqn{Y=VDU'} with \code{D=diag(d)}.
 #' @param B number of bootstrap samples to compute.
 #' @param output a vector telling which descriptions of the bootstrap distribution should be calculated. Can include any of the following: 'initial_SVD','HD_moments', 'full_HD_PC_dist', 'full_LD_PC_dist', 'd_dist', and 'U_dist'. If \code{output} is set to 'all', then all bootstrap PCA results will be reported. See below for explanations of these outputs.
 #' @param talk If TRUE, the function will print progress during calculation procedure.
 #' @param bInds a (\eqn{B} by \eqn{n}) matrix of bootstrap indeces, where \code{B} is the number of bootstrap samples, and \code{n} is the sample size. The purpose of setting a specific bootstrap sampling index is to allow the results to be more easily compared against standard bootstrap PCA calculations. If entered, the \code{bInds} argument will override the \code{B} argument.
 #' @param percentiles a vector containing percentiles to be used to calculate element-wise percentile confidence intervals for the PCs (both the \eqn{p}-dimensional components and the \eqn{n}-dimensional components). For example, \code{percentiles=c(.025,.975)} will result in \eqn{95} percent CIs.
-#' @param mc.cores passed to \code{\link[parallel]{mclapply}}. Used when transforming the \eqn{n}-dimensional PCs to the \eqn{p}-dimensional PCs.
 #' @param centerSamples whether each bootstrap sample should be centered before calculating the SVD.
+#' @param pattern_V #' if \code{Y} or \code{V} is a class \code{ff} object, then the returned PCs will also be class \code{ff} objects. \code{patern} is passed to \code{\link{ff}} in creation of the \code{initial_SVD} output.
+#' @param pattern_Vb #' if \code{Y} or \code{V} is a class \code{ff} object, then the returned PCs will also be class \code{ff} objects. \code{patern} is passed to \code{\link{ff}} in creation of the \code{full_HD_PC_dist} output.
 #'
 #' @return Output is a list which can include any of the following elements, depending on what is specified in the \code{output} argument:
 #' \describe{
 #' 	\item{initial_SVD}{The singular value decomposition of the centered, original data matrix. \code{initial_SVD} is a list containing \code{V}, the matrix of \eqn{p}-dimensional principal components, \code{d}, the vector of singular values of \code{Y}, and \code{U}, the matrix of \eqn{n}-dimensional singular vectors of \code{Y}.}
 #'	\item{HD_moments}{A list containing the bootstrap expected value (\code{EPCs}), element-wise bootstrap variance (\code{varPCs}), and element-wise bootstrap standard deviation (\code{sdPCs}) for each of the \eqn{p}-dimensional PCs. Each of these three elements of \code{HD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{HD_moments} also contains \code{momentCI}, a \eqn{K}-length list of (\eqn{p} by 2) matrices containing element-wise moment based confidence intervals for the PCs.}
-#'	\item{full_HD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} element equal to the (\eqn{p} by \eqn{K}) matrix of fitted PCs from the \eqn{b^{th}} bootstrap sample. To reorganize these matrices into a \code{K}-length list of (\code{B} by \code{p}) matrices, the \code{\link{reindexPCsByK}} can be used.}
+#'	\item{full_HD_PC_dist}{A \eqn{B}-length list of matrices (or 'ff' matrices), with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of high dimensional PCs for the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}. However, take special care when reindexing PCs stored as code{ff} objects, as this may double the number of files being stored.}
 #'	\item{HD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{2}). The \eqn{k^{th}} matrix in \code{HD_percentiles} contains element-wise percentile intervals for the \eqn{k^{th}} \eqn{p}-dimensional PC.}
-#' \item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} element equal to the (\eqn{n} by \eqn{K}) matrix of fitted PCs from the \eqn{b^{th}} bootstrap score sample. To reorganize these matrices into a \code{K}-length list of (\code{B} by \code{n}) matrices, the \code{\link{reindexPCsByK}} can be used.}
-#' \item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample.}
-#' \item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample.}
+#' \item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
+#' \item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see \code{\link{reindexScalarsByK}}.}
+#' \item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
 #' }
 #'
 #'
@@ -794,6 +806,7 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' @export
+#' @import ff
 #' @examples
 #' #use small n, small B for a quick illustration
 #' set.seed(0)
@@ -812,7 +825,7 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #' #looking at HD variability
 #'
 #' #plot several draws from bootstrap distribution
-#' VsByK<-reindexPCsByK(b$full_HD_PC_dist)
+#' VsByK<-reindexVectorsByK(b$full_HD_PC_dist)
 #' matplot(t(VsByK[[k]][1:20,]),type='l',lty=1,
 #' 		main=paste0('20 Draws from bootstrap\ndistribution of HD PC ',k))
 #'
@@ -829,7 +842,7 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #' # looking at LD variability
 #'
 #' # plot several draws from bootstrap distribution
-#' AsByK<-reindexPCsByK(b$full_LD_PC_dist)
+#' AsByK<-reindexVectorsByK(b$full_LD_PC_dist)
 #' matplot(t(AsByK[[k]][1:50,]),type='l',lty=1,
 #' 		main=paste0('50 Draws from bootstrap\ndistribution of LD PC ',k),
 #'		xlim=c(1,10),xlab='PC index (truncated)')
@@ -843,82 +856,115 @@ getMomentsAndMomentCI<-function(AsByB,V,K=dim(AsByB[[1]])[2],talk=FALSE){
 #' legend('topright',c('Moment CIs','Percentile CIs'),lty=1,
 #' 		pch=1,col=c('blue','darkgreen'))
 #' #Note: variability is mostly due to rotations with the third and fourth PC.
-#'
+#' 
 #' # Bootstrap eigenvalue distribution
-#' dsByK<-reindexDsByK(b$d_dist)
-#' boxplot(dsByK[[k]]^2,main=paste0('Covariance Matrix Eigenvalue ',k),ylab='Bootstrap Distribution')
-#' points(b$initial_SVD$d[2]^2,pch=18,col='red')
+#' dsByK<-reindexScalarsByK(b$d_dist)
+#' boxplot(dsByK[[k]]^2,main=paste0('Covariance Matrix Eigenvalue ',k),
+#' 	ylab='Bootstrap Distribution',
+#' 	ylim=range(c(dsByK[[k]]^2,b$initial_SVD$d[k]^2)))
+#' points(b$initial_SVD$d[k]^2,pch=18,col='red')
 #' legend('bottomright','Sample Value',pch=18,col='red')
-bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),centerSamples=TRUE,mc.cores=1){
+bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',talk=TRUE,bInds=NULL,percentiles=c(.025,.975),centerSamples=TRUE, pattern_V='V_', pattern_Vb='Vb_'){
+
+	#Input checks and warnings
+	if( (object.size(Y) > getOption('ffbatchbytes',16777216)) & (!'ff' %in% c(class(Y),class(V))) )
+		stop(paste0("Very large sample data matrices, here ",object.size(Y)," bytes, can lead to very large memory requirements. For especially high dimensional data, either input Y and/or V as 'ff' objects, or increase the 'ffbatchbytes' option. This option is currently set to ",getOption("ffbatchbytes", 16777216)," bytes, which is less than the size of Y (or V). Inputting an object of class 'ff' will implement a block matrix algebra procedure."))
+	svd_args<- FALSE
+	if(!is.null(V) & !is.null(U) & !is.null(d)) svd_args<- TRUE
+	if(svd_args){
+		if(dim(V)[2] != dim(U)[2] | dim(U)[2]!=length(d)) stop("'V', 'U', and 'd' have incompatible dimensions. Please include all PC basis vectors in 'V'.")
+	}
 
 	#get initial SVD, if needed
-	notfullV<-TRUE #indicator is not currently being used
-	warning_dim<-FALSE
-	if( max(dim(Y),dim(V))>10000 )
-		warning('Sample data matrix dimension greater than 10,000 can lead to very large memory requirements. To improve computational speed, consider partitioning the sample data, and using block matrix algebra, as described in section 1 of the supplemental materials for the primary bootstrap PCA paper (http://arxiv.org/abs/1405.0922)')
-	if(!is.null(V)) if(dim(V)[2] == dim(U)[2]) notfullV<-FALSE
 	if(any(is.null(V),is.null(d),is.null(U))){
-		#convert Y to a wide matrix, for ease of coding with svd()
-		if(dim(Y)[1]>dim(Y)[2]) Y<-t(Y)
+
 		if(talk) cat('Getting initial svd(Y)...')
-		svdY<-fastSVD(Y)
-		V<-svdY$v
-		U<-svdY$u
+		tall <- dim(Y)[1]>dim(Y)[2]
+
+		#Get SVD
+		svdY<-fastSVD(Y, center_A=TRUE, pattern=pattern_V) 
+		if(!tall){
+			V<-svdY$v
+			U<-svdY$u
+		}
+		if( tall){
+			U<-svdY$v
+			V<-svdY$u
+		}
 		d<-svdY$d
 		rm('svdY')
-		#center sample
-		U<-scale(U,center=TRUE,scale=FALSE)
 	}
-	n<-dim(U)[1]
+	n<-dim(U)[1] 
 	p<-dim(V)[1]
 	DUt<- tcrossprod(diag(d),U)
 
-	#if desired, use their bInds matrix
+	#if desired, use inputted bInds matrix
 	if(!is.null(bInds)) B<-dim(bInds)[1]
 	if(is.null(bInds)) bInds<-genBootIndeces(B=B,n=dim(DUt)[2])
 
 	if(talk) cat('...Calculating n-dimensional bootstrap SVDs...')
 	bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=K,talk=talk,centerSamples=centerSamples)
 	AsByB<-bootSVD_LD_output$As
+	AsByK<-reindexVectorsByK(vectorsByB=AsByB)
 
-
+	# Build output
 	out_contents<-list()
 
-	######
+	############
 	#always include
-	out_contents[['LD_moments']]<-getMomentsAndMomentCI(AsByB,diag(n),talk=FALSE)
+	out_contents[['LD_moments']]<-getMomentsAndMomentCI(AsByK,diag(min(n,p)),talk=FALSE)
 
-	AsByK<-reindexPCsByK(PCsByB=AsByB)
 	out_contents[['LD_percentiles']]<-lapply(AsByK,function(mat_k){
 			t(apply(mat_k,2,function(x) quantile(x,percentiles)))
 		})
+	ff_data <- 'ff'%in%class(V)
 
-	########
+	##############
+
+	##############
+	# Sometimes include
 	if('initial_SVD' %in% output | 'all' %in% output){
 		out_contents[['initial_SVD']]<-list(V=V,d=d,U=U)
 	}
 	if('HD_moments' %in% output | 'all' %in% output){
-		out_contents[['HD_moments']]<-getMomentsAndMomentCI(AsByB,V,talk=talk)
+		out_contents[['HD_moments']]<-getMomentsAndMomentCI(AsByK,V,talk=talk)
 	}
 
-	##### Using Full HD Distribution ####
+	#### Full HD Distribution 
 	if('full_HD_PC_dist' %in% output| 'HD_percentiles' %in% output | 'all' %in% output){
 
 		if(talk) cat('...Calculating HD Bootstrap PC distribution...')
-		out_contents[['full_HD_PC_dist']]<-As2Vs(AsByB,V=V,mc.cores=mc.cores)
+		
+		out_contents[['full_HD_PC_dist']]<- As2Vs(AsByB,V=V, pattern=pattern_Vb)#list of B, p by K matrices
 		
 		if('HD_percentiles' %in% output | 'all' %in% output){
-			out_contents[['HD_percentiles']]<-lapply(reindexPCsByK(out_contents[['full_HD_PC_dist']]),function(mat_k){
-			t(apply(mat_k,2,function(x) quantile(x,percentiles)))})
+			HDpercentiles<-list()
+			for(k in 1:K){
+				HDpercentiles[[k]]<-matrix(NA,p,2)
+				ffapply({
+					Vk_i1_i2 <- matrix(0,B,i2-i1+1)
+					for(b in 1:B){
+						if(ff_data) open(out_contents[['full_HD_PC_dist']][[b]]) #open manually, or else we get a warning message
+						Vk_i1_i2[b,]<-out_contents[['full_HD_PC_dist']][[b]][i1:i2,k]
+						if(ff_data) close(out_contents[['full_HD_PC_dist']][[b]])
+					}
+					HDpercentiles[[k]][i1:i2,]<-t(apply(Vk_i1_i2,2,function(x) quantile(x,percentiles)))
+				},DIM=c(p,B),VBYTES=.rambytes['double'],MARGIN=1,VMODE='double',FF_RETURN=FALSE) 
+			}
+			out_contents[['HD_percentiles']]<-HDpercentiles
 		}
 
+		#If full_HD_PC_dist was needed to create percentiles
+		#but isn't requested in the output, then
+		#delete it and run gc() if we have ff objects.
 		if( !'full_HD_PC_dist' %in% output & ! 'all' %in% output){
 			out_contents[['full_HD_PC_dist']]<-NULL
 			index2remove<-which(names(out_contents)=='full_HD_PC_dist')
 			out_contents<-out_contents[-index2remove]
 		}
 	}
-	##################################
+	if(ff_data) gc()
+	####
 
 	if('full_LD_PC_dist' %in% output | 'all' %in% output){
 		out_contents[['full_LD_PC_dist']]<-AsByB
