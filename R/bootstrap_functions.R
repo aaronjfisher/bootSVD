@@ -305,6 +305,7 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, patter
 #'
 #'}
 ffmatrixmult <- function(x,y=NULL,xt=FALSE,yt=FALSE,ram.output=FALSE, override.big.error=FALSE,...) {	
+	{i1<-NULL; i2<- NULL} #To avoid errors in R CMD check
 
 	dimx<-dim(x)
 	if(!is.null(y)) dimy<-dim(y)
@@ -763,6 +764,8 @@ reindexVectorsByK<-function(vectorsByB){
 #' #vectors A^b[,k], by setting V to the identity matrix.
 #' moments_A<- getMomentsAndMomentCI(As=AsByK,V=diag(ncol(AsByK[[1]])))
 getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),verbose=FALSE){
+	{i1<-NULL; i2<- NULL} #To avoid errors in R CMD check
+
 	EAs<-lapply(AsByK, colMeans) #EAs is indexed by k
 	if(verbose) cat('...calculating expected value for PCs...\n')
 	EVs<-lapply(EAs,function(EA) as.matrix(ffmatrixmult(V, matrix(EA,ncol=1),xt=FALSE,yt=FALSE,ram.output=TRUE)) )#V is pxn, EA_k is nx1, so this is overall complexity O(pnK)
@@ -790,7 +793,8 @@ getMomentsAndMomentCI<-function(AsByK,V,K=length(AsByK),verbose=FALSE){
 
 
 getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsByB=NULL,verbose=getOption('verbose')){
-
+	{i1<-NULL; i2<- NULL} #To avoid errors in R CMD check
+	
 	HDpercentiles<-list()
 	B <- dim(AsByK[[1]])[1]
 	n <- dim(AsByK[[1]])[2]
