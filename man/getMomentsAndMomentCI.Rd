@@ -8,7 +8,7 @@ getMomentsAndMomentCI(AsByK, V, K = length(AsByK), verbose = FALSE)
 \arguments{
 \item{AsByK}{a list of the bootstrap PC matrices. This list should be indexed by \eqn{k}, with the \eqn{k^{th}} element of the lsit containing a \eqn{b} by \eqn{p} matrix of results for the \eqn{k^{th}} PC, across bootstrap samples.}
 
-\item{V}{a (\eqn{p} by \eqn{n}) matrix containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix of PCs from the original sample.}
+\item{V}{a (\eqn{p} by \eqn{n}) matrix containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix of PCs from the original sample. The argument \code{V} may also be a \code{\link{ff}} object.}
 
 \item{K}{the number of leading PCs for which moments and confidence intervals should be obtained.}
 

@@ -9,7 +9,7 @@ ffmatrixmult(x, y = NULL, xt = FALSE, yt = FALSE, ram.output = FALSE,
 \arguments{
 \item{x}{a matrix or ff_matrix}
 
-\item{y}{a matrix or ff_matrix. If NULL, this is indirectly set equal to x, although a second copy of the matrix x is not actually stored.}
+\item{y}{a matrix or ff_matrix. If NULL, this is set equal to x, although a second copy of the matrix x is not actually stored.}
 
 \item{xt}{should the x matrix be transposed before multiplying}
 

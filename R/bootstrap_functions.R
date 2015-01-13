@@ -172,9 +172,9 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 #' @param nv number of high dimensional singular vectors to obtain. If \eqn{n>m}, this is the number of \eqn{n}-dimensional left singular vectors to be computed. If \eqn{n<m}, this is the number of \eqn{m}-dimensional right singular vectors to be computed.
 #' @param warning_type passed to \code{\link{qrSVD}}, which calculates either \code{svd(tcrossprod(A))} or \code{svd(crossprod(A))}, whichever is of lower dimension.
 #' @param center_A  Whether the matrix \code{A} should be centered before taking it's SVD. Centering is done along whichever dimension of \code{A} is larger. For example, if \code{A} is tall, then setting \code{center_A=TRUE} will return the SVD of \code{A} after centering the rows of \code{A}. This centering is implemented as a low dimensional matrix operation that does not require creating a copy of the original matrix \code{A}.
-#' @param pattern passed to \code{\link{ff}}. When \code{A} has class \code{ff}, the returned high dimensional singular vectors will also have class \code{ff}. \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.
+#' @param pattern passed to \code{\link{ff}}. When \code{A} has class \code{ff}, the returned high dimensional singular vectors will also have class \code{ff}. The argument \code{pattern} is passed to \code{\link{ff}} when creating the files on disk for the high dimensional singular vectors.
 #'
-#' #' @details Users might also consider changing the global options \code{ffbatchbytes}, from the \code{ff} package. When a \code{ff} object is entered, the \code{ffbatchbytes} option determines the block size for the block matrix algebra used to calculate the SVD.
+#' @details Users might also consider changing the global option \code{ffbatchbytes}, from the \code{ff} package. When a \code{ff} object is entered, the \code{ffbatchbytes} option determines the maximum block size in the block matrix algebra used to calculate the SVD.
 #'
 #' @return Let \eqn{r} be the rank of the matrix \code{A}. \code{fastSVD} solves \eqn{svd(A)=UDV'}, where \eqn{U} is an (\eqn{n} by \eqn{r}) orthonormal matrix, \eqn{D} is an (\eqn{r} by \eqn{r}) diagonal matrix; and \eqn{V} is a (\eqn{m} by \eqn{r}) orthonormal matrix. When \code{A} is entered as an \code{ff} object, the high dimensional singular vectors of \code{A} will be returned as an \code{ff} object as well. For matrices where one dimension is substantially large than the other, calculation times are considerably faster than the standard \code{svd} function.
 #'
@@ -252,7 +252,7 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, patter
 #' A function for \code{crossprod(x,y)}, for \code{tcrossprod(x,y)}, or for regular matrix multiplication, that is compatible with \code{ff} matrices. Multiplication is done without creating new matrices for the transposes of \code{x} or \code{y}. Note, the crossproduct function can't be applied directly to objects with class \code{ff}. 
 #'
 #' @param x a matrix or ff_matrix
-#' @param y a matrix or ff_matrix. If NULL, this is indirectly set equal to x, although a second copy of the matrix x is not actually stored.
+#' @param y a matrix or ff_matrix. If NULL, this is set equal to x, although a second copy of the matrix x is not actually stored.
 #' @param xt should the x matrix be transposed before multiplying
 #' @param yt should the y matrix be transposed before multiplying (e.g. \code{xt=TRUE}, \code{yt=FALSE} leads to \code{crossprod(x,y)}).
 #' @param ram.output force output to be a normal matrix, as opposed to an object with class \code{ff}.
@@ -608,11 +608,11 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 	return(VsByB)
 }
 
-#' Used for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}). If the inputted matrices have class \code{ff}, the returned matrices will also have class \code{ff}.
+#' Used for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
 #'
 #' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{\link{getMomentsAndMomentCI}}.
 #'
-#' @param matricesByB a \code{B}-length list of (\code{r} by \code{K}) matrices from each bootstrap sample.
+#' @param matricesByB a \code{B}-length list of (\code{r} by \code{K}) matrices from each bootstrap sample. If the list elements have class \code{ff}, the returned matrices will also have class \code{ff}.
 #' @param pattern (optional) passed to \code{\link{ff}}.
 #' @return a \code{K}-length list of (\eqn{B} by \eqn{r}) matrices. If elements of \code{matricesByB} have class \code{ff}, then the returned, reordered matrices will also have class \code{ff}.
 #'
@@ -732,7 +732,7 @@ reindexVectorsByK<-function(vectorsByB){
 #'
 #' Let \eqn{K} be the number of PCs of interest, let \eqn{B} be the number of bootstrap samples, and let \eqn{p} be the number of measurements per subject, also known as the dimension of the sample. In general, we use \eqn{k} to refer to the principal component (PC) index, where \eqn{k=1,2,...K}, and use \eqn{b} to refer to the bootstrap index, where \eqn{b=1,2,...B}.
 #' @param AsByK a list of the bootstrap PC matrices. This list should be indexed by \eqn{k}, with the \eqn{k^{th}} element of the lsit containing a \eqn{b} by \eqn{p} matrix of results for the \eqn{k^{th}} PC, across bootstrap samples.
-#' @param V a (\eqn{p} by \eqn{n}) matrix containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix of PCs from the original sample.
+#' @param V a (\eqn{p} by \eqn{n}) matrix containing the coordinate vectors for the matrices within the \code{AsByK} list, where \eqn{n} is sample size and \eqn{p} is sample dimension. Generally for bootstrap PCA, \code{AsByK} should contain the PCs for the bootstrap scores, and \code{V} should be the matrix of PCs from the original sample. The argument \code{V} may also be a \code{\link{ff}} object.
 #' @param K the number of leading PCs for which moments and confidence intervals should be obtained.
 #' @param verbose setting to \code{TRUE} will cause the function to print its progress in calculating the bootstrap variance for each PC.
 #' @return a list containing
