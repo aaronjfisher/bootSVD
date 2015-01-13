@@ -1123,7 +1123,7 @@ bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',verbose
 
 	#Clean up:
 	if(!'initial_SVD' %in% output){
-		if(ff_data) physical(V)$finalizer <- "delete"
+		if(ff_data) attr(attr(V, 'physical'),'finalizer') <- "delete"
 		rm(V)
 	}
 	if(ff_data) gc()
