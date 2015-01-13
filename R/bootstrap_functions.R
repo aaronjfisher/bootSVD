@@ -4,11 +4,6 @@
 		# bootstrap PCs are stored as a B-length list
 		# of pxK matrices
 
-# !! set it up to erase initial svd in finalization, with a warning (copy paste this file over)
-
-#Notes for commit:
-	# replaced `talk` with `verbose` and used `getOption('verbose')`
-	# removed 'all' option form 'output' argument -- forcing user to specify by hand if they want the full_HD_PC_dist. However, now we give more things by default, such as the full_LD_PC_dist. Only the stuff that's hard to compute is optional.
 
 
 
