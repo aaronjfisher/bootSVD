@@ -24,7 +24,7 @@ svdY<-fastSVD(Y)
 V<- svdY$v #original sample PCs
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
 bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
-bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 
 ########
 # to get 'low dimensional PC' moments and lower percentiles
@@ -61,7 +61,7 @@ lines(V[,k])
 ########
 
 # Note: This function can also be used to reorganize the
-#   high dimensional PCs, but for 'ff' matrices, this will
+#   high dimensional PCs. For 'ff' matrices, this will
 #   create a new set of files on disk.
 }
 

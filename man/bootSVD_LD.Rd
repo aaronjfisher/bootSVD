@@ -4,7 +4,7 @@
 \title{Calculate bootstrap distribution of \eqn{n}-dimensional PCs}
 \usage{
 bootSVD_LD(UD, DUt = t(UD), bInds = genBootIndeces(B = 1000, n =
-  dim(DUt)[2]), K, warning_type = "silent", talk = FALSE,
+  dim(DUt)[2]), K, warning_type = "silent", verbose = getOption("verbose"),
   centerSamples = TRUE)
 }
 \arguments{
@@ -18,7 +18,7 @@ bootSVD_LD(UD, DUt = t(UD), bInds = genBootIndeces(B = 1000, n =
 
 \item{warning_type}{passed to \code{\link{qrSVD}}, when taking the SVD of the low dimensional bootstrap score matrices.}
 
-\item{talk}{if \code{TRUE}, a progress bar will appear.}
+\item{verbose}{if \code{TRUE}, a progress bar will appear.}
 
 \item{centerSamples}{whether each bootstrap sample should be centered before calculating the SVD.}
 }
@@ -40,6 +40,6 @@ Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 svdY<-fastSVD(Y)
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
 bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
-bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 }
 

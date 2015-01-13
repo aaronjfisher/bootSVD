@@ -3,7 +3,7 @@
 \alias{getMomentsAndMomentCI}
 \title{Calculate bootstrap moments and moment-based confidence intervals for the PCs.}
 \usage{
-getMomentsAndMomentCI(AsByK, V, K = length(AsByK), talk = FALSE)
+getMomentsAndMomentCI(AsByK, V, K = length(AsByK), verbose = FALSE)
 }
 \arguments{
 \item{AsByK}{a list of the bootstrap PC matrices. This list should be indexed by \eqn{k}, with the \eqn{k^{th}} element of the lsit containing a \eqn{b} by \eqn{p} matrix of results for the \eqn{k^{th}} PC, across bootstrap samples.}
@@ -12,7 +12,7 @@ getMomentsAndMomentCI(AsByK, V, K = length(AsByK), talk = FALSE)
 
 \item{K}{the number of leading PCs for which moments and confidence intervals should be obtained.}
 
-\item{talk}{setting to \code{TRUE} will cause the function to print its progress in calculating the bootstrap variance for each PC.}
+\item{verbose}{setting to \code{TRUE} will cause the function to print its progress in calculating the bootstrap variance for each PC.}
 }
 \value{
 a list containing
@@ -32,11 +32,11 @@ svdY<-fastSVD(Y)
 V<-svdY$v #right singular vectors of the wide matrix Y
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
 bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
-bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,talk=TRUE)
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 
 AsByB<-bootSVD_LD_output$As
 AsByK<-reindexMatricesByK(AsByB)
-moments<-getMomentsAndMomentCI(AsByK,V,talk=TRUE)
+moments<-getMomentsAndMomentCI(AsByK,V,verbose=TRUE)
 plot(V[,1],type='l',ylim=c(-.1,.1),main='Original PC1, with CI in blue')
 matlines(moments$momentCI[[1]],col='blue',lty=1)
 
