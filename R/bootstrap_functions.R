@@ -132,15 +132,15 @@ NULL
 simEEG<-function(n=100, centered=TRUE, propVarNoise=.45,wide=TRUE){
 	#start by building Y as tall, then flip if wide==TRUE
 
-	#data(EEG_PCA,envir = environment()) #using lazy data instead
 
-	signalVar<-sum(EEG_score_var)
+	signalVar<-sum(bootSVD::EEG_score_var)
 	noiseVar<- signalVar * propVarNoise/(1-propVarNoise)
 
 	noise<- matrix(rnorm(n*900,sd=sqrt(noiseVar/900)),nrow=900,ncol=n) #900 is the dimension of the sample
-	scores<-  diag(sqrt(EEG_score_var)) %*% matrix(rnorm(n*5),nrow=5,ncol=n)
+	scores<-  diag(sqrt(bootSVD::EEG_score_var)) %*% matrix(rnorm(n*5),nrow=5,ncol=n)
 
-	Y<- tcrossprod(EEG_mu,rep(1,n)) + EEG_leadingV%*%scores + noise
+	Y<- tcrossprod(bootSVD::EEG_mu,rep(1,n)) + 
+		bootSVD::EEG_leadingV%*%scores + noise
 	
 	if(centered) Y <- t(scale(t(Y), center=TRUE, scale=FALSE)) 
 
