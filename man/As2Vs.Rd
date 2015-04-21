@@ -23,12 +23,12 @@ Let \eqn{B} be the number of bootstrap samples, indexed by \eqn{b=1,2,...B}.
 \code{As2Vs} is a simple function converts the list of principal component (PC) matrices for the bootstrap scores to a list of principal component matrices on the original high dimensional space. Both of these lists, the input and the output of \code{As2Vs}, are indexed by \eqn{b}.
 }
 \examples{
-#use small n, small B for a quick illustration
+#use small n, small B, for a quick illustration
 set.seed(0)
 Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 svdY<-fastSVD(Y)
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
-bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 
 Vs<-As2Vs(As=bootSVD_LD_output$As,V=svdY$v)

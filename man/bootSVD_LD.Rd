@@ -35,12 +35,12 @@ If the score matrix is inputted to \code{bootSVD_LD}, the results can be transfo
 \code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Most users may want to instead consider using \code{\link{bootSVD}}, which also calculates descriptions of the high dimensional components. Note that \code{\link{bootSVD}} calls \code{bootSVD_LD}.
 }
 \examples{
-#use small n, small B for a quick illustration
+#use small n, small B, for a quick illustration
 set.seed(0)
 Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 svdY<-fastSVD(Y)
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
-bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 }
 

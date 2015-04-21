@@ -18,6 +18,6 @@ A (\eqn{B} by \eqn{n}) matrix of bootstrap indeces. Let \code{bInds} denote the 
 Let \eqn{n} be the original sample size, \eqn{p} be the number of measurements per subject, and \eqn{B} be the number of bootstrap samples. \code{genBootIndeces} generates a (\eqn{B} by \eqn{n}) matrix containing \eqn{B} indexing vectors that can be used to create \eqn{B} bootstrap samples, each of size \eqn{n}.
 }
 \examples{
-bInds<-genBootIndeces(B=1000,n=200)
+bInds<-genBootIndeces(B=50,n=200)
 }
 

@@ -498,7 +498,7 @@ qrSVD<-function(x,lim_attempts=50, warning_type='silent',warning_file='qrSVD_war
 #' @return A (\eqn{B} by \eqn{n}) matrix of bootstrap indeces. Let \code{bInds} denote the output of \code{getBootIndeces}, and \code{Y} denote the original (\eqn{p} by \eqn{n}) sample. Then \code{Y[,bInds[b,]]} is the \eqn{b^{th}} bootstrap sample.
 #' @export
 #' @examples
-#' bInds<-genBootIndeces(B=1000,n=200)
+#' bInds<-genBootIndeces(B=50,n=200)
 genBootIndeces<-function(B,n){
 	bInds<-array(NA,dim=c(B,n)) #bootstrap indeces
 	for(b in 1:B) bInds[b,]<-sample(n,replace=TRUE)
@@ -527,12 +527,12 @@ genBootIndeces<-function(B,n){
 #' @export
 #'
 #' @examples
-#' #use small n, small B for a quick illustration
+#' #use small n, small B, for a quick illustration
 #' set.seed(0)
 #' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) 
 #' svdY<-fastSVD(Y)
 #' DUt<- tcrossprod(diag(svdY$d),svdY$u)
-#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+#' bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,warning_type='silent',verbose=getOption('verbose'),centerSamples=TRUE){
 	B<-dim(bInds)[1]
@@ -587,12 +587,12 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #'
 #' @import parallel
 #' @examples
-#' #use small n, small B for a quick illustration
+#' #use small n, small B, for a quick illustration
 #' set.seed(0)
 #' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) 
 #' svdY<-fastSVD(Y)
 #' DUt<- tcrossprod(diag(svdY$d),svdY$u)
-#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+#' bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 #'
 #' Vs<-As2Vs(As=bootSVD_LD_output$As,V=svdY$v)
@@ -621,13 +621,13 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' @import ff
 #'
 #' @examples
-#' #use small n, small B for a quick illustration
+#' #use small n, small B, for a quick illustration
 #' set.seed(0)
 #' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) 
 #' svdY<-fastSVD(Y)
 #' V<- svdY$v #original sample PCs
 #' DUt<- tcrossprod(diag(svdY$d),svdY$u)
-#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+#' bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 #'
 #' ########
@@ -705,11 +705,12 @@ reindexMatricesByK<-function(matricesByB, pattern){
 #' @export
 #'
 #' @examples
+#' #use small n, small B, for a quick illustration
 #' set.seed(0)
 #' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) 
 #' svdY<-fastSVD(Y)
 #' DUt<- tcrossprod(diag(svdY$d),svdY$u)
-#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+#' bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 #' 
 #' dsByK<-reindexVectorsByK(bootSVD_LD_output$ds)
@@ -745,13 +746,13 @@ reindexVectorsByK<-function(vectorsByB){
 #' @import ff
 #' @examples
 #'
-#' #use small n, small B for a quick illustration
+#' #use small n, small B, for a quick illustration
 #' set.seed(0)
 #' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) 
 #' svdY<-fastSVD(Y)
 #' V<-svdY$v #right singular vectors of the wide matrix Y
 #' DUt<- tcrossprod(diag(svdY$d),svdY$u)
-#' bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+#' bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 #' bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 #' 
 #' AsByB<-bootSVD_LD_output$As
@@ -886,10 +887,10 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #' @export
 #' @import ff
 #' @examples
-#' #use small n, small B for a quick illustration
+#' #use small n, small B, for a quick illustration
 #' set.seed(0)
 #' Y<-simEEG(n=100, centered=TRUE, wide=TRUE) 
-#' b<-bootSVD(Y, B=200, K=2, output= 
+#' b<-bootSVD(Y, B=50, K=2, output= 
 #'  	c('initial_SVD', 'HD_moments', 'full_HD_PC_dist',
 #'  	'HD_percentiles'), verbose=TRUE)
 #' 
@@ -957,7 +958,7 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #' ff_dir<-tempdir()
 #' pattern_V <- paste0(ff_dir,'/V_')
 #' pattern_Vb <- paste0(ff_dir,'/Vb_')
-#' bff <- bootSVD(Yff, B=200, K=2, output=c('initial_SVD', 'HD_moments',
+#' bff <- bootSVD(Yff, B=50, K=2, output=c('initial_SVD', 'HD_moments',
 #'  	'full_HD_PC_dist', 'HD_percentiles'), pattern_V= pattern_V,
 #'  	pattern_Vb=pattern_Vb, verbose=TRUE)
 #' 

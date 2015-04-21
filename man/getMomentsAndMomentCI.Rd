@@ -26,13 +26,13 @@ a list containing
 Let \eqn{K} be the number of PCs of interest, let \eqn{B} be the number of bootstrap samples, and let \eqn{p} be the number of measurements per subject, also known as the dimension of the sample. In general, we use \eqn{k} to refer to the principal component (PC) index, where \eqn{k=1,2,...K}, and use \eqn{b} to refer to the bootstrap index, where \eqn{b=1,2,...B}.
 }
 \examples{
-#use small n, small B for a quick illustration
+#use small n, small B, for a quick illustration
 set.seed(0)
 Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 svdY<-fastSVD(Y)
 V<-svdY$v #right singular vectors of the wide matrix Y
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
-bInds<-genBootIndeces(B=200,n=dim(DUt)[2])
+bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
 bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
 
 AsByB<-bootSVD_LD_output$As

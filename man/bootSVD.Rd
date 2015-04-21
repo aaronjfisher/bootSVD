@@ -67,10 +67,10 @@ Applies fast bootstrap PCA, using the method from (Fisher et al., 2014). Dimensi
 Users might also consider changing the global options \code{ffbatchbytes}, from the \code{ff} package, and \code{mc.cores}, from the \code{parallel} package. When \code{ff} objects are entered as arguments for \code{bootSVD}, the required matrix algebra is done using block matrix alebra. The \code{ffbatchbytes} option determines the size of the largest block matrix that will be held in memory at any one time. The \code{mc.cores} option (set to 1 by default) determines the level of parallelization to use when calculating the high dimensional distribution of the bootstrap PCs (see \code{\link{mclapply}}).
 }
 \examples{
-#use small n, small B for a quick illustration
+#use small n, small B, for a quick illustration
 set.seed(0)
 Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
-b<-bootSVD(Y, B=200, K=2, output=
+b<-bootSVD(Y, B=50, K=2, output=
  	c('initial_SVD', 'HD_moments', 'full_HD_PC_dist',
  	'HD_percentiles'), verbose=TRUE)
 
@@ -138,7 +138,7 @@ Yff<-as.ff(Y, pattern='Y_')
 ff_dir<-tempdir()
 pattern_V <- paste0(ff_dir,'/V_')
 pattern_Vb <- paste0(ff_dir,'/Vb_')
-bff <- bootSVD(Yff, B=200, K=2, output=c('initial_SVD', 'HD_moments',
+bff <- bootSVD(Yff, B=50, K=2, output=c('initial_SVD', 'HD_moments',
  	'full_HD_PC_dist', 'HD_percentiles'), pattern_V= pattern_V,
  	pattern_Vb=pattern_Vb, verbose=TRUE)
 
