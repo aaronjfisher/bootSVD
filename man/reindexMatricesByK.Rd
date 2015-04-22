@@ -25,7 +25,7 @@ svdY<-fastSVD(Y)
 V<- svdY$v #original sample PCs
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
 bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
-bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=interactive())
 
 ########
 # to get 'low dimensional PC' moments and lower percentiles

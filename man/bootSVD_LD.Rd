@@ -41,6 +41,6 @@ Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 svdY<-fastSVD(Y)
 DUt<- tcrossprod(diag(svdY$d),svdY$u)
 bInds<-genBootIndeces(B=50,n=dim(DUt)[2])
-bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=TRUE)
+bootSVD_LD_output<-bootSVD_LD(DUt=DUt,bInds=bInds,K=3,verbose=interactive())
 }
 

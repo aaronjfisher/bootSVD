@@ -72,7 +72,7 @@ set.seed(0)
 Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 b<-bootSVD(Y, B=50, K=2, output=
  	c('initial_SVD', 'HD_moments', 'full_HD_PC_dist',
- 	'HD_percentiles'), verbose=TRUE)
+ 	'HD_percentiles'), verbose=interactive())
 
 #explore results
 matplot(b$initial_SVD$V[,1:4],type='l',main='Fitted PCs',lty=1)
@@ -140,7 +140,7 @@ pattern_V <- paste0(ff_dir,'/V_')
 pattern_Vb <- paste0(ff_dir,'/Vb_')
 bff <- bootSVD(Yff, B=50, K=2, output=c('initial_SVD', 'HD_moments',
  	'full_HD_PC_dist', 'HD_percentiles'), pattern_V= pattern_V,
- 	pattern_Vb=pattern_Vb, verbose=TRUE)
+ 	pattern_Vb=pattern_Vb, verbose=interactive())
 
 
 # Note that elements of full_HD_PC_dist and initial_SVD
