@@ -601,11 +601,17 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' # indexed by b = 1,2...B, where B is the number of bootstrap samples
 As2Vs<-function(AsByB, V, pattern=NULL, ...){
 	B<-length(AsByB)
-	VsByB<-list()
-	DUMP<-mclapply(1:B, FUN=function(b){
-			VsByB[[b]]<<-ffmatrixmult(V,AsByB[[b]],xt=FALSE,yt=FALSE, pattern=paste0(pattern,b,'_'))
-			if('ff' %in% class(VsByB[[b]])) close(VsByB[[b]])
-		},mc.cores=getOption("mc.cores", 1), ...) #default ffmatrixmult uses a random tempfile name to store each matrix (for big matrices).
+
+	bumpUp<-function(b){
+		 	#default ffmatrixmult uses a random tempfile name to store each matrix (for big matrices).
+			out <- ffmatrixmult(V,AsByB[[b]],xt=FALSE,yt=FALSE, pattern=paste0(pattern,b,'_'))
+			if('ff' %in% class(out)) close(out)
+			out
+		}
+
+	VsByB<-mclapply(as.list(1:B), FUN=bumpUp, mc.cores=getOption("mc.cores", 1), ...)
+
+	if(length(VsByB)==0) stop('error using mclappy. Parallelization failed.')
 	return(VsByB)
 }
 
