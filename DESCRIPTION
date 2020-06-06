@@ -11,8 +11,8 @@ Description: Implements fast, exact bootstrap Principal Component Analysis and
     the user, the 'parallel' package can be used to parallelize the calculation of
     the bootstrap PCs.
 Version: 0.5
-Author: Aaron Fisher <fisher@jhu.edu>
-Maintainer: Aaron Fisher <fisher@jhu.edu>
+Author: Aaron Fisher <afishe27@alumni.jh.edu>
+Maintainer: Aaron Fisher <afishe27@alumni.jh.edu>
 URL: http://arxiv.org/abs/1405.0922
 Depends:
     R (>= 3.0.2)
