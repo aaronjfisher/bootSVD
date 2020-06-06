@@ -1189,13 +1189,12 @@ print.bootSVD <- function(object){
 #'
 #' All arguments are passed to \code{\link{bootSVD}}. This function should be used in exactly the same way as \code{\link{bootSVD}}. The only difference is that PCA typically involves re-centering each bootstrap sample, whereas calculations involving the SVD might not.
 #'
-#' @param centerSamples whether each bootstrap sample should be centered before computing the bootstrap principal components.
-#' @param ... passed to \code{\link{bootSVD}}
+#' @param ... passed to \code{\link{bootSVD}}, with centerSamples set to TRUE.
 #' @return \code{bootSVD(...)}
 #'
 #' @export
 #' 
-bootPCA<-function( centerSamples=TRUE, ... ) bootSVD(...)
+bootPCA<-function(...) bootSVD(centerSamples=TRUE, ...)
 
 
 
