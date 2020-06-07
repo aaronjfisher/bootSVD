@@ -248,21 +248,21 @@ fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, patter
 	out
 }
 #' @export
-print.fastSVD <- function(object){
-	k <- min(length(object$d),4)
+print.fastSVD <- function(x, ...){
+	k <- min(length(x$d),4)
 	cat(sprintf("SVD of %d by %d matrix\n\n", 
-            nrow(object$u), nrow(object$v)))
-	for(n in names(object)){
-		if('ff' %in% class(object[[n]])) cat(n,'has class:',class(object[[n]]),'\n')
+            nrow(x$u), nrow(x$v)))
+	for(n in names(x)){
+		if('ff' %in% class(x[[n]])) cat(n,'has class:',class(x[[n]]),'\n')
 	}
 
 	cat("\nLeading eigenvalues\n")
-	print(object$d[1:k])
+	print(x$d[1:k])
 	cat(sprintf("\nFirst %d rows of first %d columns of u:\n",k,k))
-	print(object$u[1:k,1:k])
+	print(x$u[1:k,1:k])
 	cat(sprintf("\nFirst %d rows of first %d columns of v:\n",k,k))
-	print(object$v[1:k,1:k])
-	invisible(object)
+	print(x$v[1:k,1:k])
+	invisible(x)
 }
 
 
@@ -1163,10 +1163,10 @@ bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',verbose
 	return(out_contents)
 }
 #' @export
-print.bootSVD <- function(object){
-	K <- length(object$LD_percentiles)
-	B <- length(object$d_dist)
-	cat(sprintf("Object storing results from %d bootstrap computations of the leading %d principal components (PCs).\n", 
+print.bootSVD <- function(x, ...){
+	K <- length(x$LD_percentiles)
+	B <- length(x$d_dist)
+	cat(sprintf("x storing results from %d bootstrap computations of the leading %d principal components (PCs).\n", 
             B,K))
 	
 	Kmax <- 6
@@ -1174,13 +1174,13 @@ print.bootSVD <- function(object){
 		cat(sprintf(
 		"\nMean (sd) of crossproduct of initial PC%d with bootstrap PC%ds: %f (%f).",
 		k,k,
-		object$LD_moments$EPCs[[k]][k],
-		object$LD_moments$sdPCs[[k]][k]
+		x$LD_moments$EPCs[[k]][k],
+		x$LD_moments$sdPCs[[k]][k]
 		))
 	}
 	if(K>Kmax) cat('\n...\n')
 
-	invisible(object)
+	invisible(x)
 }
 
 
