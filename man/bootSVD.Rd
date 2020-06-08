@@ -73,6 +73,7 @@ Y<-simEEG(n=100, centered=TRUE, wide=TRUE)
 b<-bootSVD(Y, B=50, K=2, output= 
  	c('initial_SVD', 'HD_moments', 'full_HD_PC_dist',
  	'HD_percentiles'), verbose=interactive())
+b
 
 #explore results
 matplot(b$initial_SVD$V[,1:4],type='l',main='Fitted PCs',lty=1)
@@ -145,7 +146,7 @@ bff <- bootSVD(Yff, B=50, K=2, output=c('initial_SVD', 'HD_moments',
 
 # Note that elements of full_HD_PC_dist and initial_SVD
 # have class 'ff'
-lapply(bff,function(x) class(x[[1]]))
+str(lapply(bff,function(x) class(x[[1]])))
 #Show some results of bootstrap draws
 plot(bff$full_HD_PC_dist[[1]][,k],type='l')
 #Reindexing by K will create a new set of ff files.

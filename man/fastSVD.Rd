@@ -33,8 +33,8 @@ Users might also consider changing the global option \code{ffbatchbytes}, from t
 
 Y<-simEEG(n=100,centered=TRUE,wide=TRUE)
 svdY<-fastSVD(Y)
-V<-svdY$v #sample PCs for a wide matrix are the right singular vectors
-matplot(V[,1:5],type='l',lty=1) #PCs from simulated data
+svdY
+matplot(svdY$v[,1:5],type='l',lty=1) #sample PCs for a wide matrix are the right singular vectors
 
 #Note: For a tall, demeaned matrix Y, with columns corresponding 
 #to subjects and rows to measurements, 
@@ -44,6 +44,7 @@ matplot(V[,1:5],type='l',lty=1) #PCs from simulated data
 dev.off()
 library(ff)
 Yff<-as.ff(Y)
-Vff<-fastSVD(Yff)$v
-matplot(Vff[,1:5],type='l',lty=1) 
+svdYff<-fastSVD(Yff)
+svdYff
+matplot(svdYff$v[,1:5],type='l',lty=1) 
 }

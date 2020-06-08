@@ -1,8 +1,12 @@
+# bootstrap PCs are stored as a B-length list of pxK matrices
 # A note on dependencies: 
-	#parallel is used for mclappy, in As2Vs.
 	#ff is used to store large matrices
-		# bootstrap PCs are stored as a B-length list
-		# of pxK matrices
+	#Beyond dependencies in importFrom, see also uses of getOption & attr
+	# When testing examples, try replacing ff with ff::ff; 
+		# as.ff with ff::as.ff; and physical with bit::physical, 
+		# to make sure there are not extra untracked 
+		# ff dependencies being accessed within the bootSVD code.
+
 
 
 
@@ -185,8 +189,8 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 #' 
 #' Y<-simEEG(n=100,centered=TRUE,wide=TRUE)
 #' svdY<-fastSVD(Y)
-#' V<-svdY$v #sample PCs for a wide matrix are the right singular vectors
-#' matplot(V[,1:5],type='l',lty=1) #PCs from simulated data
+#' svdY
+#' matplot(svdY$v[,1:5],type='l',lty=1) #sample PCs for a wide matrix are the right singular vectors
 #'
 #' #Note: For a tall, demeaned matrix Y, with columns corresponding 
 #' #to subjects and rows to measurements, 
@@ -196,8 +200,9 @@ os<-function(x,units='Mb') print(object.size(x),units=units)
 #' dev.off()
 #' library(ff)
 #' Yff<-as.ff(Y)
-#' Vff<-fastSVD(Yff)$v
-#' matplot(Vff[,1:5],type='l',lty=1) 
+#' svdYff<-fastSVD(Yff)
+#' svdYff
+#' matplot(svdYff$v[,1:5],type='l',lty=1) 
 fastSVD<-function(A,nv=min(dim(A)),warning_type='silent', center_A=FALSE, pattern=NULL){ 
 	N<-min(dim(A))
 	p<-max(dim(A))
@@ -921,6 +926,7 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #' b<-bootSVD(Y, B=50, K=2, output= 
 #'  	c('initial_SVD', 'HD_moments', 'full_HD_PC_dist',
 #'  	'HD_percentiles'), verbose=interactive())
+#' b
 #' 
 #' #explore results
 #' matplot(b$initial_SVD$V[,1:4],type='l',main='Fitted PCs',lty=1)
@@ -993,7 +999,7 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #' 
 #' # Note that elements of full_HD_PC_dist and initial_SVD
 #' # have class 'ff'
-#' lapply(bff,function(x) class(x[[1]]))
+#' str(lapply(bff,function(x) class(x[[1]])))
 #' #Show some results of bootstrap draws
 #' plot(bff$full_HD_PC_dist[[1]][,k],type='l')
 #' #Reindexing by K will create a new set of ff files.
