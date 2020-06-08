@@ -100,6 +100,7 @@ NULL
 #'
 #'
 #' @export
+#' @importFrom stats rnorm
 #'
 #'
 #' @references
@@ -160,6 +161,7 @@ simEEG<-function(n=100, centered=TRUE, propVarNoise=.45,wide=TRUE){
 #'
 #' @return print(object.size(x),units=units)
 #' @export
+#' @importFrom utils object.size
 #' @examples
 #' Y<-simEEG(n=50)
 #' os(Y)
@@ -286,7 +288,7 @@ print.fastSVD <- function(x, ...){
 #' @param override.big.error If the dimension of the final output matrix is especially large, \code{ffmatrixmult} will abort, giving an error. This is meant to avoid the accidental creation of very large matrices. Set override.big.error=TRUE to bypass this error.
 #' @param ... passed to \code{\link{ff}}.
 #' @export
-#' @import ff
+#' @importFrom ff ffapply ff
 #' @return A standard matrix, or a matrix with class \code{ff} if one of the input matrices has class \code{ff}.
 #' @examples \dontrun{
 #'  library(ff)
@@ -417,6 +419,7 @@ ffmatrixmult <- function(x,y=NULL,xt=FALSE,yt=FALSE,ram.output=FALSE, override.b
 #'
 #' @return a random orthonormal (\eqn{n} by \eqn{n}) matrix
 #' @export
+#' @importFrom stats rnorm
 #'
 #' @examples
 #' A<-genQ(3)
@@ -552,7 +555,8 @@ genBootIndeces<-function(B,n){
 #'	\item{time}{The computation time required for the procedure, taken using \code{\link{system.time}}.}
 #' If the score matrix is inputted to \code{bootSVD_LD}, the results can be transformed to get the PCs on the original space by multiplying each matrix \eqn{A^b} by the PCs of the original sample, \eqn{V} (see \code{\link{As2Vs}}). The bootstrap scores of the original sample are equal to \eqn{U^b D^b}.
 #' @export
-#'
+#' @importFrom utils setTxtProgressBar txtProgressBar
+#' 
 #' @examples
 #' #use small n, small B, for a quick illustration
 #' set.seed(0)
@@ -612,7 +616,7 @@ bootSVD_LD<-function(UD,DUt=t(UD),bInds=genBootIndeces(B=1000,n=dim(DUt)[2]),K,w
 #' @references
 #' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
-#' @import parallel
+#' @importFrom parallel mclapply
 #' @examples
 #' #use small n, small B, for a quick illustration
 #' set.seed(0)
@@ -651,7 +655,7 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 #' @return a \code{K}-length list of (\eqn{B} by \eqn{r}) matrices. If elements of \code{matricesByB} have class \code{ff}, then the returned, reordered matrices will also have class \code{ff}.
 #'
 #' @export
-#' @import ff
+#' @importFrom ff ff
 #'
 #' @examples
 #' #use small n, small B, for a quick illustration
@@ -776,7 +780,8 @@ reindexVectorsByK<-function(vectorsByB){
 #'	\item{sdVs}{a list containing element-wise bootstrap standard errors for each of the \code{K} fitted PCs, indexed by \code{k}.}
 #'	\item{momentCI}{a list of (\eqn{p} by \eqn{2}) matrices, indexed by \code{k}, where \code{momentCI[[k]][j,]} is the pointwise moment-based CI for the \eqn{j^{th}} element of the \eqn{k^{th}} PC.}
 #' @export
-#' @import ff
+#' @importFrom ff ffapply .rambytes
+#' @importFrom stats quantile var
 #' @examples
 #'
 #' #use small n, small B, for a quick illustration
@@ -918,7 +923,8 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #' Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. \emph{Fast, Exact Bootstrap Principal Component Analysis for p>1 million}. 2014. http://arxiv.org/abs/1405.0922
 #'
 #' @export
-#' @import ff
+#' @importFrom utils object.size
+#' @importFrom stats quantile
 #' @examples
 #' #use small n, small B, for a quick illustration
 #' set.seed(0)
