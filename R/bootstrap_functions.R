@@ -1178,7 +1178,7 @@ bootSVD<-function(Y=NULL,K,V=NULL,d=NULL,U=NULL,B=50,output='HD_moments',verbose
 print.bootSVD <- function(x, ...){
 	K <- length(x$LD_percentiles)
 	B <- length(x$d_dist)
-	cat(sprintf("x storing results from %d bootstrap computations of the leading %d principal components (PCs).\n", 
+	cat(sprintf("Results from %d bootstrap computations of the leading %d principal components (PCs).\n", 
             B,K))
 	
 	Kmax <- 6
