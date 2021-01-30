@@ -6,7 +6,7 @@ The R package bootSVD can be used to implement fast, exact bootstrap principal c
 
 The primary function in this package is the bootSVD function, for which we include a documented example based on simulated sleep electroencephalogram (EEG) data. When the data is too large to store in memory, functions in this package can also be applied to objects of class `ff`. These `ff` objects have a representation in memory, but store their primary contents on disk (see [the ff package](https://CRAN.R-project.org/package=ff)). 
 
-Speed improvements are driven by the fact that sample size (n) is much less than sample dimension, which allows a n-dimensional representation of the sample to be sufficient for most calculations.
+Speed improvements are driven by the fact that sample size (n) is much less than sample dimension, which allows a n-dimensional representation of the sample to be sufficient for many calculations.
 
 To install:
 ```S
@@ -15,7 +15,7 @@ install.packages("devtools")
 
 ## main package
 library(devtools)
-install_github('bootSVD','aaronjfisher')
+install_github('aaronjfisher/bootSVD')
 
 library(bootSVD)
 
