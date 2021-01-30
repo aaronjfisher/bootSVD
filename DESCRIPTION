@@ -3,7 +3,7 @@ Title: Fast, Exact Bootstrap Principal Component Analysis for High Dimensional
     Data
 Description: Implements fast, exact bootstrap Principal Component Analysis and
     Singular Value Decompositions for high dimensional data, as described in
-    <http://arxiv.org/abs/1405.0922>. For data matrices that are too large to operate
+    <arXiv:1405.0922> (DOI: 10.1080/01621459.2015.1062383). For data matrices that are too large to operate
     on in memory, users can input objects with class 'ff' (see the 'ff'
     package), where the actual data is stored on disk. In response, this
     package will implement a block matrix algebra procedure for calculating the
