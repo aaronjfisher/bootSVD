@@ -4,8 +4,15 @@
 \alias{ffmatrixmult}
 \title{Matrix multiplication with "ff_matrix" or "matrix" inputs}
 \usage{
-ffmatrixmult(x, y = NULL, xt = FALSE, yt = FALSE, ram.output = FALSE,
-  override.big.error = FALSE, ...)
+ffmatrixmult(
+  x,
+  y = NULL,
+  xt = FALSE,
+  yt = FALSE,
+  ram.output = FALSE,
+  override.big.error = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{a matrix or ff_matrix}

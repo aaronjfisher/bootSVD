@@ -4,10 +4,21 @@
 \alias{bootSVD}
 \title{Calculates bootstrap distribution of PCA (i.e. SVD) results}
 \usage{
-bootSVD(Y = NULL, K, V = NULL, d = NULL, U = NULL, B = 50,
-  output = "HD_moments", verbose = getOption("verbose"), bInds = NULL,
-  percentiles = c(0.025, 0.975), centerSamples = TRUE, pattern_V = "V_",
-  pattern_Vb = "Vb_")
+bootSVD(
+  Y = NULL,
+  K,
+  V = NULL,
+  d = NULL,
+  U = NULL,
+  B = 50,
+  output = "HD_moments",
+  verbose = getOption("verbose"),
+  bInds = NULL,
+  percentiles = c(0.025, 0.975),
+  centerSamples = TRUE,
+  pattern_V = "V_",
+  pattern_Vb = "Vb_"
+)
 }
 \arguments{
 \item{Y}{initial data sample, which can be either a matrix or a \code{\link{ff}} matrix. \code{Y} can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} (see definitions below) are not entered, then \code{bootSVD} will also compute the SVD of \code{Y}. In this case where the SVD is computed, \code{bootSVD} will assume that the larger dimension of \code{Y} is \eqn{p}, and the smaller dimension of code {Y} is \eqn{n} (i.e. \code{bootSVD} assumes that (\eqn{p>n}). This assumption can be overriden by manually entering \code{V}, \code{U} and \code{d}.\cr
@@ -46,16 +57,16 @@ For especially high dimensional cases, caution should be used if requesting 'ful
 \item{HD_moments}{A list containing the bootstrap expected value (\code{EPCs}), element-wise bootstrap variance (\code{varPCs}), and element-wise bootstrap standard deviation (\code{sdPCs}) for each of the \eqn{p}-dimensional PCs. Each of these three elements of \code{HD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{HD_moments} also contains \code{momentCI}, a \eqn{K}-length list of (\eqn{p} by 2) matrices containing element-wise moment based confidence intervals for the PCs.}
 \item{full_HD_PC_dist}{A \eqn{B}-length list of matrices (or \code{ff} matrices), with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of high dimensional PCs for the \eqn{b^{th}} bootstrap sample. \cr
 For especially high dimensional cases when the output is returned as \code{\link{ff}} matrices, caution should be used if requesting 'full_HD_PC_dist' due to potential storage limitations. \cr
-To reindex these PCs by \eqn{k} (the PC index) as opposed to \eqn{b} (the bootstrap index), see \code{\link{reindexMatricesByK}}. Again though, caution shoulded be used when reindexing PCs stored as \code{ff} objects, as this will double the number of files stored.}
+To reindex these PCs by \eqn{k} (the PC index) as opposed to \eqn{b} (the bootstrap index), see [reindexMatricesByK()]. Again though, caution shoulded be used when reindexing PCs stored as \code{ff} objects, as this will double the number of files stored.}
 \item{HD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{q}), where \eqn{q} is the number of percentiles requested (i.e. \eqn{q} = \code{length(percentiles)}). The \eqn{k^{th}} matrix in \code{HD_percentiles} contains element-wise percentiles for the \eqn{k^{th}}, \eqn{p}-dimensional PC.}
 }
 
 
 
 In addition, the following results are always included in the output, regardless of what is specified in the \code{output} argument:
-\item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}.}
-\item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
-\item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}.}
+\item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see [reindexMatricesByK()].}
+\item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see [reindexVectorsByK()].}
+\item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see [reindexMatricesByK()].}
 \item{LD_moments}{A list that is comparable to \code{HD_moments}, but that instead describes the variability of the \eqn{n}-dimensional principal components of the resampled score matrices. \code{LD_moments} contains the bootstrap expected value (\code{EPCs}), element-wise bootstrap variances (\code{varPCs}), and element-wise bootstrap standard deviations (\code{sdPCs}) for each of the \eqn{n}-dimensional PCs. Each of these three elements of \code{LD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{LD_moments} also contains \code{momentCI}, a list of \eqn{K} (\eqn{n} by 2) matrices containing element-wise, moment-based confidence intervals for the PCs.}
 \item{LD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{q}), where \eqn{q} is the number of percentiles requested (i.e. \eqn{q} = \code{length(percentiles)}). The \eqn{k^{th}} matrix in \code{LD_percentiles} contains element-wise percentiles for the \eqn{k^{th}} \eqn{n}-dimensional PC.
 }
@@ -89,7 +100,7 @@ k<-2
 #plot several draws from bootstrap distribution
 VsByK<-reindexMatricesByK(b$full_HD_PC_dist)
 matplot(t(VsByK[[k]][1:20,]),type='l',lty=1,
-		main=paste0('20 Draws from bootstrap\\ndistribution of HD PC ',k))
+		main=paste0('20 Draws from bootstrap\ndistribution of HD PC ',k))
 
 #plot pointwise CIs
 matplot(b$HD_moments$momentCI[[k]],type='l',col='blue',lty=1,
@@ -106,7 +117,7 @@ abline(h=0,lty=2,col='darkgrey')
 # plot several draws from bootstrap distribution
 AsByK<-reindexMatricesByK(b$full_LD_PC_dist)
 matplot(t(AsByK[[k]][1:50,]),type='l',lty=1,
-		main=paste0('50 Draws from bootstrap\\ndistribution of LD PC ',k),
+		main=paste0('50 Draws from bootstrap\ndistribution of LD PC ',k),
 	xlim=c(1,10),xlab='PC index (truncated)')
 
 # plot pointwise CIs

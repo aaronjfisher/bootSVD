@@ -453,7 +453,7 @@ genQ<-function(n,lim_attempts=200){
 #' 
 #' \code{qrSVD} will attempt the standard \code{\link{svd}} function before preconditioning the matrix \eqn{x}.
 #'
-#' @seealso \code{\link{fastSVD}}
+#' @seealso [fastSVD()]
 #'
 #' @export
 #'
@@ -538,7 +538,7 @@ genBootIndeces<-function(B,n){
 
 #' Calculate bootstrap distribution of \eqn{n}-dimensional PCs
 #'
-#' \code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Most users may want to instead consider using \code{\link{bootSVD}}, which also calculates descriptions of the high dimensional components. Note that \code{\link{bootSVD}} calls \code{bootSVD_LD}.
+#' \code{bootSVD_LD} Calculates the bootstrap distribution of the principal components (PCs) of a low dimensional matrix. If the score matrix is inputted, the output of \code{bootSVD_LD} can be used to to calculate bootstrap standard errors, confidence regions, or the full bootstrap distribution of the high dimensional components. Most users may want to instead consider using [bootSVD()], which also calculates descriptions of the high dimensional components. Note that [bootSVD()] calls \code{bootSVD_LD}.
 #'
 #' @param UD (optional) a (\eqn{n} by \eqn{n}) matrix of scores, were rows denote individuals, and columns denote measurements in the PC space.
 #' @param DUt the transpose of \code{UD}. If both \code{UD} and \code{UDt} are entered and \code{t(UD)!=DUt}, the \code{DUt} argument will override the \code{UD} argument.
@@ -553,7 +553,7 @@ genBootIndeces<-function(B,n){
 #'	\item{ds}{a \code{B}-length list of vectors, indexed by the bootstrap index \code{b}, with each vector containing the singular values of the corresponding bootstrap sample.}
 #'	\item{Us}{a \code{B}-length list, indexed by the bootstrap index \code{b}, of the (\eqn{n} by \eqn{n}) matrices \eqn{U^b}.}
 #'	\item{time}{The computation time required for the procedure, taken using \code{\link{system.time}}.}
-#' If the score matrix is inputted to \code{bootSVD_LD}, the results can be transformed to get the PCs on the original space by multiplying each matrix \eqn{A^b} by the PCs of the original sample, \eqn{V} (see \code{\link{As2Vs}}). The bootstrap scores of the original sample are equal to \eqn{U^b D^b}.
+#' If the score matrix is inputted to \code{bootSVD_LD}, the results can be transformed to get the PCs on the original space by multiplying each matrix \eqn{A^b} by the PCs of the original sample, \eqn{V} (see [As2Vs()]). The bootstrap scores of the original sample are equal to \eqn{U^b D^b}.
 #' @export
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' 
@@ -648,7 +648,7 @@ As2Vs<-function(AsByB, V, pattern=NULL, ...){
 
 #' Used for calculation of low dimensional standard errors & percentiles, by re-indexing the \eqn{A^b} by PC index (\eqn{k}) rather than bootstrap index (\eqn{b}).
 #'
-#' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{\link{getMomentsAndMomentCI}}.
+#' This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by [getMomentsAndMomentCI()].
 #'
 #' @param matricesByB a \code{B}-length list of (\code{r} by \code{K}) matrices from each bootstrap sample. If the list elements have class \code{ff}, the returned matrices will also have class \code{ff}.
 #' @param pattern (optional) passed to \code{\link{ff}}.
@@ -903,7 +903,7 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #'	\item{HD_moments}{A list containing the bootstrap expected value (\code{EPCs}), element-wise bootstrap variance (\code{varPCs}), and element-wise bootstrap standard deviation (\code{sdPCs}) for each of the \eqn{p}-dimensional PCs. Each of these three elements of \code{HD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{HD_moments} also contains \code{momentCI}, a \eqn{K}-length list of (\eqn{p} by 2) matrices containing element-wise moment based confidence intervals for the PCs.}
 #'	\item{full_HD_PC_dist}{A \eqn{B}-length list of matrices (or \code{ff} matrices), with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of high dimensional PCs for the \eqn{b^{th}} bootstrap sample. \cr
 #' For especially high dimensional cases when the output is returned as \code{\link{ff}} matrices, caution should be used if requesting 'full_HD_PC_dist' due to potential storage limitations. \cr
-#' To reindex these PCs by \eqn{k} (the PC index) as opposed to \eqn{b} (the bootstrap index), see \code{\link{reindexMatricesByK}}. Again though, caution shoulded be used when reindexing PCs stored as \code{ff} objects, as this will double the number of files stored.}
+#' To reindex these PCs by \eqn{k} (the PC index) as opposed to \eqn{b} (the bootstrap index), see [reindexMatricesByK()]. Again though, caution shoulded be used when reindexing PCs stored as \code{ff} objects, as this will double the number of files stored.}
 #'	\item{HD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{q}), where \eqn{q} is the number of percentiles requested (i.e. \eqn{q} = \code{length(percentiles)}). The \eqn{k^{th}} matrix in \code{HD_percentiles} contains element-wise percentiles for the \eqn{k^{th}}, \eqn{p}-dimensional PC.}
 #' }
 #'
@@ -911,9 +911,9 @@ getHDpercentiles<-function(AsByK,V,K=length(AsByK),percentiles=c(.025,.975),VsBy
 #'
 #' In addition, the following results are always included in the output, regardless of what is specified in the \code{output} argument:
 # \describe{
-#' \item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}.}
-#' \item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see \code{\link{reindexVectorsByK}}.}
-#' \item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see \code{\link{reindexMatricesByK}}.}
+#' \item{full_LD_PC_dist}{A \eqn{B}-length list of matrices, with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of PCs of the scores in the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see [reindexMatricesByK()].}
+#' \item{d_dist}{A \code{B}-length list of vectors, with the \eqn{b^{th}} element of \code{d_dist} containing the \eqn{n}-length vector of singular values from the \eqn{b^{th}} bootstrap sample. To reindex these values by \eqn{k} (the PC index), see [reindexVectorsByK()].}
+#' \item{U_dist}{A \code{B}-length list of (\eqn{n} by \eqn{K}) matrices, with the columns of the \eqn{b^{th}} matrix containing the \eqn{n}-length singular vectors from the \eqn{b^{th}} bootstrap sample. To reindex these vectors by \eqn{k} (the PC index), see [reindexMatricesByK()].}
 #' \item{LD_moments}{A list that is comparable to \code{HD_moments}, but that instead describes the variability of the \eqn{n}-dimensional principal components of the resampled score matrices. \code{LD_moments} contains the bootstrap expected value (\code{EPCs}), element-wise bootstrap variances (\code{varPCs}), and element-wise bootstrap standard deviations (\code{sdPCs}) for each of the \eqn{n}-dimensional PCs. Each of these three elements of \code{LD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{LD_moments} also contains \code{momentCI}, a list of \eqn{K} (\eqn{n} by 2) matrices containing element-wise, moment-based confidence intervals for the PCs.}
 #' \item{LD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{q}), where \eqn{q} is the number of percentiles requested (i.e. \eqn{q} = \code{length(percentiles)}). The \eqn{k^{th}} matrix in \code{LD_percentiles} contains element-wise percentiles for the \eqn{k^{th}} \eqn{n}-dimensional PC.
 #' }
@@ -1199,9 +1199,9 @@ print.bootSVD <- function(x, ...){
 
 #' Quickly calculates bootstrap PCA results (wrapper for bootSVD)
 #'
-#' All arguments are passed to \code{\link{bootSVD}}. This function should be used in exactly the same way as \code{\link{bootSVD}}. The only difference is that PCA typically involves re-centering each bootstrap sample, whereas calculations involving the SVD might not.
+#' All arguments are passed to [bootSVD()]. This function should be used in exactly the same way as [bootSVD()]. The only difference is that PCA typically involves re-centering each bootstrap sample, whereas calculations involving the SVD might not.
 #'
-#' @param ... passed to \code{\link{bootSVD}}, with centerSamples set to TRUE.
+#' @param ... passed to [bootSVD()], with centerSamples set to TRUE.
 #' @return \code{bootSVD(...)}
 #'
 #' @export

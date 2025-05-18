@@ -4,8 +4,13 @@
 \alias{fastSVD}
 \title{Fast SVD of a wide or tall matrix}
 \usage{
-fastSVD(A, nv = min(dim(A)), warning_type = "silent", center_A = FALSE,
-  pattern = NULL)
+fastSVD(
+  A,
+  nv = min(dim(A)),
+  warning_type = "silent",
+  center_A = FALSE,
+  pattern = NULL
+)
 }
 \arguments{
 \item{A}{matrix of dimension (\eqn{n} by \eqn{m}). This can be either of class \code{matrix} or \code{ff}.}

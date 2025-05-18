@@ -7,11 +7,11 @@
 bootPCA(...)
 }
 \arguments{
-\item{...}{passed to \code{\link{bootSVD}}, with centerSamples set to TRUE.}
+\item{...}{passed to [bootSVD()], with centerSamples set to TRUE.}
 }
 \value{
 \code{bootSVD(...)}
 }
 \description{
-All arguments are passed to \code{\link{bootSVD}}. This function should be used in exactly the same way as \code{\link{bootSVD}}. The only difference is that PCA typically involves re-centering each bootstrap sample, whereas calculations involving the SVD might not.
+All arguments are passed to [bootSVD()]. This function should be used in exactly the same way as [bootSVD()]. The only difference is that PCA typically involves re-centering each bootstrap sample, whereas calculations involving the SVD might not.
 }
