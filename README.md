@@ -27,7 +27,7 @@ help(package=bootSVD)
 
 References: 
 
-Aaron Fisher, Brian Caffo, and Vadim Zipunnikov. *Fast, Exact Bootstrap Principal Component Analysis for p>1 million.* Working Paper, 2014. [http://arxiv.org/abs/1405.0922](https://arxiv.org/abs/1405.0922/)
+Aaron Fisher, Brian Caffo, Brian Schwartz and Vadim Zipunnikov. *Fast, Exact Bootstrap Principal Component Analysis for p>1 million.* Journal of the American Statistical Association: Theory and Methods, 2016. [https://doi.org/10.1080/01621459.2015.1062383](https://doi.org/10.1080/01621459.2015.1062383)
 
 
 
