@@ -21,13 +21,13 @@ bootSVD(
 )
 }
 \arguments{
-\item{Y}{initial data sample, which can be either a matrix or a \code{\link{ff}} matrix. \code{Y} can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} (see definitions below) are not entered, then \code{bootSVD} will also compute the SVD of \code{Y}. In this case where the SVD is computed, \code{bootSVD} will assume that the larger dimension of \code{Y} is \eqn{p}, and the smaller dimension of code {Y} is \eqn{n} (i.e. \code{bootSVD} assumes that (\eqn{p>n}). This assumption can be overriden by manually entering \code{V}, \code{U} and \code{d}.\cr
-For cases where the entire data matrix can be easily stored in memory (e.g. \eqn{p<50000}), it is generally appropriate to enter \code{Y} as a standard matrix. When \code{Y} is large enough that matrix algebra on \code{Y} is too demanding for memory though, \code{Y} should be entered as a \code{\link{ff}} object, where the actual data is stored on disk. If \code{Y} has class \code{ff}, and \code{V}, \code{d} or \code{U} is not entered, then block matrix algebra will be used to calculate the PCs and bootstrap PCs. The results of these calculations will be returned as \code{\link{ff}} objects as well.}
+\item{Y}{initial data sample, which can be either a matrix or a \code{ff} matrix. \code{Y} can be either tall (\eqn{p} by \eqn{n}) or wide (\eqn{n} by \eqn{p}). If \code{Y} is entered and \code{V}, \code{d} and \code{U} (see definitions below) are not entered, then \code{bootSVD} will also compute the SVD of \code{Y}. In this case where the SVD is computed, \code{bootSVD} will assume that the larger dimension of \code{Y} is \eqn{p}, and the smaller dimension of \code{Y} is \eqn{n} (i.e. \code{bootSVD} assumes that \eqn{p>n}. This assumption can be overriden by manually entering \code{V}, \code{U} and \code{d}.\cr
+For cases where the entire data matrix can be easily stored in memory (e.g. \eqn{p<50000}), it is generally appropriate to enter \code{Y} as a standard matrix. When \code{Y} is large enough that matrix algebra on \code{Y} is too demanding for memory though, \code{Y} should be entered as a \code{ff} object, where the actual data is stored on disk. If \code{Y} has class \code{ff}, and \code{V}, \code{d} or \code{U} is not entered, then block matrix algebra will be used to calculate the PCs and bootstrap PCs. The results of these calculations will be returned as \code{ff} objects as well.}
 
 \item{K}{number of PCs to calculate the bootstrap distribution for.}
 
 \item{V}{(optional) the (\eqn{p} by \eqn{n}) full matrix of \eqn{p}-dimensional PCs for the sample data matrix. If \code{Y} is wide, these are the right singular vectors of \code{Y} (i.e. \eqn{Y=UDV'}). If \code{Y} is tall, these are the left singular vectors of \code{Y} (i.e. \eqn{Y=VDU'}). In general it is assumed that \eqn{p>n}, however, this can be overridden by setting \code{V} and \code{U} appropriately.\cr
-Like \code{Y}, the argument \code{V} can be either a standard matrix or a \code{\link{ff}} matrix. If \code{V} is a \code{ff} object, the bootstrap PCs, if requested, will be returned as \code{\link{ff}} objects as well.}
+Like \code{Y}, the argument \code{V} can be either a standard matrix or a \code{ff} matrix. If \code{V} is a \code{ff} object, the bootstrap PCs, if requested, will be returned as \code{ff} objects as well.}
 
 \item{d}{(optional) \eqn{n}-length vector of the singular values of \code{Y}. For example, if \code{Y} is tall, then we have \eqn{Y=VDU'} with \code{D=diag(d)}.}
 
@@ -46,9 +46,9 @@ For especially high dimensional cases, caution should be used if requesting 'ful
 
 \item{centerSamples}{whether each bootstrap sample should be centered before calculating the SVD.}
 
-\item{pattern_V}{if \code{Y} is a class \code{ff} object, then the returned PCs of \code{Y} will also be a class \code{ff} object. \code{pattern_V} is passed to \code{\link{ff}} in creation of the \code{initial_SVD} output. Specifically, \code{pattern_V} is a filename prefix used for storing the high dimensional PCs of the original sample.}
+\item{pattern_V}{if \code{Y} is a class \code{ff} object, then the returned PCs of \code{Y} will also be a class \code{ff} object. \code{pattern_V} is passed to \link[ff]{ff} in creation of the \code{initial_SVD} output. Specifically, \code{pattern_V} is a filename prefix used for storing the high dimensional PCs of the original sample.}
 
-\item{pattern_Vb}{if \code{Y} or \code{V} is a class \code{ff} object, then the returned bootstrap PCs will also be class \code{ff} objects. \code{pattern_Vb} is passed to \code{\link{ff}} in creation of the \code{full_HD_PC_dist} output. Specifically, \code{pattern_Vb} is a filename prefix used for storing the high dimensional bootstrap PCs.}
+\item{pattern_Vb}{if \code{Y} or \code{V} is a class \code{ff} object, then the returned bootstrap PCs will also be class \code{ff} objects. \code{pattern_Vb} is passed to \link[ff]{ff} in creation of the \code{full_HD_PC_dist} output. Specifically, \code{pattern_Vb} is a filename prefix used for storing the high dimensional bootstrap PCs.}
 }
 \value{
 \code{bootSVD} returns a list that can include any of the following elements, depending on what is specified in the \code{output} argument:
@@ -56,7 +56,7 @@ For especially high dimensional cases, caution should be used if requesting 'ful
 	\item{initial_SVD}{The singular value decomposition of the centered, original data matrix. \code{initial_SVD} is a list containing \code{V}, the matrix of \eqn{p}-dimensional principal components, \code{d}, the vector of singular values of \code{Y}, and \code{U}, the matrix of \eqn{n}-dimensional singular vectors of \code{Y}.}
 \item{HD_moments}{A list containing the bootstrap expected value (\code{EPCs}), element-wise bootstrap variance (\code{varPCs}), and element-wise bootstrap standard deviation (\code{sdPCs}) for each of the \eqn{p}-dimensional PCs. Each of these three elements of \code{HD_moments} is also a list, which contains \eqn{K} vectors, one for each PC. \code{HD_moments} also contains \code{momentCI}, a \eqn{K}-length list of (\eqn{p} by 2) matrices containing element-wise moment based confidence intervals for the PCs.}
 \item{full_HD_PC_dist}{A \eqn{B}-length list of matrices (or \code{ff} matrices), with the \eqn{b^{th}} list element equal to the (\eqn{p} by \eqn{K}) matrix of high dimensional PCs for the \eqn{b^{th}} bootstrap sample. \cr
-For especially high dimensional cases when the output is returned as \code{\link{ff}} matrices, caution should be used if requesting 'full_HD_PC_dist' due to potential storage limitations. \cr
+For especially high dimensional cases when the output is returned as \link[ff]{ff} matrices, caution should be used if requesting 'full_HD_PC_dist' due to potential storage limitations. \cr
 To reindex these PCs by \eqn{k} (the PC index) as opposed to \eqn{b} (the bootstrap index), see [reindexMatricesByK()]. Again though, caution shoulded be used when reindexing PCs stored as \code{ff} objects, as this will double the number of files stored.}
 \item{HD_percentiles}{A list of \eqn{K} matrices, each of dimension (\eqn{p} by \eqn{q}), where \eqn{q} is the number of percentiles requested (i.e. \eqn{q} = \code{length(percentiles)}). The \eqn{k^{th}} matrix in \code{HD_percentiles} contains element-wise percentiles for the \eqn{k^{th}}, \eqn{p}-dimensional PC.}
 }

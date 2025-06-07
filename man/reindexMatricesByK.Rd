@@ -9,7 +9,7 @@ reindexMatricesByK(matricesByB, pattern)
 \arguments{
 \item{matricesByB}{a \code{B}-length list of (\code{r} by \code{K}) matrices from each bootstrap sample. If the list elements have class \code{ff}, the returned matrices will also have class \code{ff}.}
 
-\item{pattern}{(optional) passed to \code{\link{ff}}.}
+\item{pattern}{(optional) passed to \link[ff]{ff}.}
 }
 \value{
 a \code{K}-length list of (\eqn{B} by \eqn{r}) matrices. If elements of \code{matricesByB} have class \code{ff}, then the returned, reordered matrices will also have class \code{ff}.

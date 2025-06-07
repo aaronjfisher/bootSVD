@@ -27,7 +27,7 @@ ffmatrixmult(
 
 \item{override.big.error}{If the dimension of the final output matrix is especially large, \code{ffmatrixmult} will abort, giving an error. This is meant to avoid the accidental creation of very large matrices. Set override.big.error=TRUE to bypass this error.}
 
-\item{...}{passed to \code{\link{ff}}.}
+\item{...}{passed to \link[ff]{ff}.}
 }
 \value{
 A standard matrix, or a matrix with class \code{ff} if one of the input matrices has class \code{ff}.
