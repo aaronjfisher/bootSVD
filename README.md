@@ -1,6 +1,8 @@
 bootSVD
 =======
-[![Build Status](https://travis-ci.org/aaronjfisher/bootSVD.png?branch=master)](https://travis-ci.org/aaronjfisher/bootSVD)
+
+[![R-CMD-check](https://github.com/aaronjfisher/bootSVD/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/aaronjfisher/bootSVD/actions/workflows/R-CMD-check.yaml)
+
 
 The R package bootSVD can be used to implement fast, exact bootstrap principal component analysis and singular value decompositions for high dimensional data, where the number of measurements per subject is much larger than the number of subjects. This package is based on the methodology outlined by Fisher et al. (2014), who demonstrate the method on a dataset of 352 brain magnetic resonace images (MRIs), with approximately 3 million measurements per subject.
 
