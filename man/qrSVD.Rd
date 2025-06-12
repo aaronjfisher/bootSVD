@@ -4,8 +4,13 @@
 \alias{qrSVD}
 \title{Wrapper for \code{\link{svd}}, which uses random preconditioning to restart when svd fails to converge}
 \usage{
-qrSVD(x, lim_attempts = 50, warning_type = "silent",
-  warning_file = "qrSVD_warnings.txt", ...)
+qrSVD(
+  x,
+  lim_attempts = 50,
+  warning_type = "silent",
+  warning_file = "qrSVD_warnings.txt",
+  ...
+)
 }
 \arguments{
 \item{x}{a matrix to calculate the svd for}
@@ -32,5 +37,5 @@ svdx <- qrSVD(x)
 svdx
 }
 \seealso{
-\code{\link{fastSVD}}
+[fastSVD()]
 }

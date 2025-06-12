@@ -48,7 +48,7 @@ for(i in 1:5){
 }
 par(mfrow=c(1,2))
 matplot(V_sign_adj[,1:5],type='l',lty=1,
-		main='PCs from simulated data,\\n sign adjusted')
+		main='PCs from simulated data,\n sign adjusted')
 matplot(EEG_leadingV,type='l',lty=1,main='Population PCs')
 }
 \references{

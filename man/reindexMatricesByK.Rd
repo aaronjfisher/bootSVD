@@ -9,13 +9,13 @@ reindexMatricesByK(matricesByB, pattern)
 \arguments{
 \item{matricesByB}{a \code{B}-length list of (\code{r} by \code{K}) matrices from each bootstrap sample. If the list elements have class \code{ff}, the returned matrices will also have class \code{ff}.}
 
-\item{pattern}{(optional) passed to \code{\link{ff}}.}
+\item{pattern}{(optional) passed to \link[ff]{ff}.}
 }
 \value{
 a \code{K}-length list of (\eqn{B} by \eqn{r}) matrices. If elements of \code{matricesByB} have class \code{ff}, then the returned, reordered matrices will also have class \code{ff}.
 }
 \description{
-This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by \code{\link{getMomentsAndMomentCI}}.
+This function is used as a precursor step for calculate bootstrap standard errors, or percentiles. For very high dimensional data, we recommend that the this function be applied to the low dimensional components \eqn{A^b}, but the function can also be used to reorder a list of high dimensional bootstrap PCs. It can equivalently be used to reorder a list of scores. In general, we recommend that as many operations as possible be applied to the low dimensional components, as opposed to their high dimensional counterparts.  This function is called by [getMomentsAndMomentCI()].
 }
 \examples{
 #use small n, small B, for a quick illustration
